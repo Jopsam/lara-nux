@@ -1,130 +1,119 @@
 ## Verification Report
 
 **Change**: lara-nux-v1
-**Scope**: Final pre-UI readiness verification after the API/contract batch
+**Version**: N/A
 **Mode**: Standard
 
 ---
 
 ### Completeness
-
 | Metric | Value |
 |--------|-------|
 | Tasks total | 23 |
-| Tasks complete | 11 |
-| Tasks incomplete | 12 |
+| Tasks complete | 22 |
+| Tasks incomplete | 1 |
 
-Completed scope verified in repo: 1.1-1.3, 2.1-2.4, 3.1-3.4.
+Incomplete tasks:
+- **6.3** Add end-to-end coverage in `testing/e2e/ubuntu/*` for install -> register site -> browse HTTPS -> switch PHP -> uninstall on Ubuntu 22.04 and 24.04.
 
-Incomplete tasks are Phase 4 UI implementation, Phase 5 packaging, Phase 6 expanded testing, and Phase 7 OSS hardening. For this gate, the relevant question is whether backend/contracts still block Phase 4.
+Resolved from previous verification:
+- **4.1 client shell verification blocker is resolved.** `client/wails/go.sum` is checked in and the Linux tray now has a default non-`systray` path, so plain repo-state `go test ./...` in `client/wails/` passes.
+- **Task 6.3 overstatement is resolved honestly.** `openspec/changes/lara-nux-v1/tasks.md` now marks 6.3 incomplete, which matches the current evidence level.
 
 ---
 
 ### Build & Tests Execution
 
-**Build / static quality**: ✅ `go vet ./...` passed
+**Build / static quality**: ✅ `go vet ./...` passed in `daemon/`
 
-**Tests**: ✅ `go test ./...` passed
+**Tests**:
+- ✅ `daemon/`: `go test ./...` passed
+- ✅ `daemon/internal/app`: `go test -count=1 ./internal/app/...` passed
+- ✅ `daemon/`: `go test -cover ./...` passed
+- ✅ `testing/e2e/ubuntu/`: `go test ./...` passed
+- ✅ `testing/e2e/ubuntu/`: `go test -count=1 ./...` passed
+- ✅ `client/wails/`: `go test ./...` passed
+- ✅ `client/wails/`: `go test -count=1 ./...` passed
 
-```text
-?    github.com/jopsam/lara-nux/daemon/cmd/lara-nuxd                         [no test files]
-ok   github.com/jopsam/lara-nux/daemon/internal/api                          (cached)
-ok   github.com/jopsam/lara-nux/daemon/internal/app                          (cached)
-?    github.com/jopsam/lara-nux/daemon/internal/host                         [no test files]
-?    github.com/jopsam/lara-nux/daemon/internal/host/ubuntu/caddy           [no test files]
-?    github.com/jopsam/lara-nux/daemon/internal/host/ubuntu/packages        [no test files]
-?    github.com/jopsam/lara-nux/daemon/internal/host/ubuntu/php             [no test files]
-ok   github.com/jopsam/lara-nux/daemon/internal/host/ubuntu/resolved        (cached)
-?    github.com/jopsam/lara-nux/daemon/internal/host/ubuntu/systemd         [no test files]
-```
-
-**Coverage**: ⚠️ `go test -cover ./...` passed, but coverage remains uneven
+**Coverage**: `go test -cover ./...` in `daemon/` passed
 
 ```text
-cmd/lara-nuxd                        0.0%
-internal/api                        41.7%
-internal/app                        24.4%
-internal/host/ubuntu/caddy           0.0%
-internal/host/ubuntu/packages        0.0%
-internal/host/ubuntu/php             0.0%
-internal/host/ubuntu/resolved       48.9%
-internal/host/ubuntu/systemd         0.0%
+github.com/jopsam/lara-nux/daemon/cmd/lara-nuxd              0.0%
+github.com/jopsam/lara-nux/daemon/internal/api              58.9%
+github.com/jopsam/lara-nux/daemon/internal/app              46.1%
+github.com/jopsam/lara-nux/daemon/internal/host/ubuntu/caddy 60.2%
+github.com/jopsam/lara-nux/daemon/internal/host/ubuntu/packages 54.8%
+github.com/jopsam/lara-nux/daemon/internal/host/ubuntu/php  63.4%
+github.com/jopsam/lara-nux/daemon/internal/host/ubuntu/resolved 48.9%
+github.com/jopsam/lara-nux/daemon/internal/host/ubuntu/systemd 61.9%
 ```
 
 ---
 
 ### Spec Compliance Matrix
 
-| Requirement | Scenario | Test / Evidence | Result |
-|-------------|----------|-----------------|--------|
-| environment-bootstrap | Supported bootstrap | `daemon/internal/app/bootstrap_service.go`, `daemon/cmd/lara-nuxd/main.go` | ✅ COMPLIANT |
-| environment-bootstrap | Unsupported host | `daemon/internal/app/bootstrap_service.go` preflight guards | ✅ COMPLIANT |
-| environment-bootstrap | Safe uninstall | managed asset tracking in `managed_assets.go`, packaging work still deferred | ⚠️ PARTIAL |
-| php-runtime-management | Register supported runtime | `daemon/internal/app/php_registry_test.go`, `/rpc/php.register` | ✅ COMPLIANT |
-| php-runtime-management | Reject unsupported runtime | `daemon/internal/app/php_registry_test.go` | ✅ COMPLIANT |
-| php-runtime-management | Switch project runtime | `daemon/internal/app/orchestration.go`, `/rpc/php.switch` | ✅ COMPLIANT |
-| local-site-serving | Serve a Laravel project | `daemon/internal/app/orchestration.go`, `/rpc/sites.register` | ✅ COMPLIANT |
-| local-site-serving | Reject invalid project | `daemon/internal/app/orchestration_test.go` rollback path | ✅ COMPLIANT |
-| local-dns-routing | Resolve registered site | `daemon/internal/host/ubuntu/resolved/manager.go`, `manager_test.go` | ✅ COMPLIANT |
-| local-dns-routing | Resolver conflict detected | `daemon/internal/host/ubuntu/resolved/manager_test.go` | ✅ COMPLIANT |
-| service-orchestration | Start required services | `daemon/internal/app/service_manager.go`, `daemon/internal/api/services_rpc.go` | ✅ COMPLIANT |
-| service-orchestration | Port conflict blocks readiness | `daemon/internal/app/health_service_test.go`, `/rpc/health` | ✅ COMPLIANT |
+| Requirement | Scenario | Test | Result |
+|-------------|----------|------|--------|
+| environment-bootstrap | Supported bootstrap | `daemon/internal/app/bootstrap_service_test.go > TestBootstrapPreflightAcceptsSupportedUbuntuHosts` | ✅ COMPLIANT |
+| environment-bootstrap | Unsupported host | `daemon/internal/app/bootstrap_service_test.go > TestBootstrapPreflightRejectsUnsupportedUbuntuRelease` | ✅ COMPLIANT |
+| environment-bootstrap | Safe uninstall | `testing/e2e/ubuntu/managed_workflow_test.go > TestUbuntuLTSManagedWorkflowEvidence` | ⚠️ PARTIAL |
+| local-dns-routing | Resolve registered site | `testing/e2e/ubuntu/managed_workflow_test.go > TestUbuntuLTSManagedWorkflowEvidence` | ⚠️ PARTIAL |
+| local-dns-routing | Resolver conflict detected | `daemon/internal/host/ubuntu/resolved/manager_test.go > TestEnsureTestStubRejectsResolverConflictsWithoutMutatingManagedStub` | ✅ COMPLIANT |
+| local-site-serving | Serve a Laravel project | `testing/e2e/ubuntu/managed_workflow_test.go > TestUbuntuLTSManagedWorkflowEvidence` | ⚠️ PARTIAL |
+| local-site-serving | Reject invalid project | `daemon/internal/app/site_registry_test.go > TestValidateLaravelPathRejectsMissingRequirements`; `daemon/internal/app/site_registry_test.go > TestSiteRegistryRejectsDuplicateDomainCaseInsensitive`; `daemon/internal/app/orchestration_test.go > TestSiteActivationRollsBackRegisteredSiteWhenActivationFails` | ✅ COMPLIANT |
+| php-runtime-management | Register supported runtime | `daemon/internal/app/php_registry_test.go > TestPHPRegistryRegistersSupportedRuntime` | ✅ COMPLIANT |
+| php-runtime-management | Reject unsupported runtime | `daemon/internal/app/php_registry_test.go > TestPHPRegistryRejectsUnsupportedRuntime` | ✅ COMPLIANT |
+| php-runtime-management | Switch project runtime | `testing/e2e/ubuntu/managed_workflow_test.go > TestUbuntuLTSManagedWorkflowEvidence` | ⚠️ PARTIAL |
+| service-orchestration | Start required services | `testing/e2e/ubuntu/managed_workflow_test.go > TestUbuntuLTSManagedWorkflowEvidence` | ✅ COMPLIANT |
+| service-orchestration | Port conflict blocks readiness | `daemon/internal/app/health_service_test.go > TestHealthServiceReportsResolverSocketAndRuntimeFailures` | ✅ COMPLIANT |
 
-**Compliance summary**: 10/11 scenarios compliant, 1 partial due to packaging/uninstall work intentionally deferred to Phase 5.
+**Compliance summary**: 8/12 scenarios compliant
 
 ---
 
 ### Correctness (Static — Structural Evidence)
-
-| Area | Status | Notes |
-|------|--------|-------|
-| Site management RPC surface | ✅ Implemented | `daemon/internal/api/sites_rpc.go` now exposes `/rpc/sites.list`, `/rpc/sites.get`, `/rpc/sites.update`. |
-| Runtime read-model RPC surface | ✅ Implemented | `daemon/internal/api/php_rpc.go` now exposes `/rpc/php.list`, `/rpc/php.default`, `/rpc/php.inventory`. |
-| Shared contracts for Phase 4 | ✅ Implemented | `shared/contracts/rpc/v1/contracts.ts` and `contracts.schema.json` include site query/update and runtime read-model DTOs. |
-| Router coverage for UI-facing transport | ✅ Implemented | `daemon/internal/api/router_test.go` exercises the new site/runtime read endpoints. |
-| Install/uninstall execution path | ⚠️ Partial | Packaging directories exist, but scripts/systemd assets remain placeholders under `packaging/ubuntu/`. |
+| Requirement | Status | Notes |
+|------------|--------|-------|
+| Supported Ubuntu bootstrap | ✅ Implemented | `daemon/internal/app/bootstrap_service.go` plus focused preflight tests cover supported and unsupported host handling. |
+| Managed `*.test` routing | ✅ Implemented | `daemon/internal/host/ubuntu/resolved/manager.go` owns managed stub install, removal, and conflict detection. |
+| Predictable site activation | ✅ Implemented | `daemon/internal/app/orchestration.go`, `site_management.go`, and `daemon/internal/host/ubuntu/caddy/manager.go` implement registration, activation, rollback, and config rendering. |
+| Supported PHP lifecycle and switching | ✅ Implemented | `php_registry.go`, `php_manager.go`, `runtime_onboarding.go`, and Ubuntu PHP adapters cover registration and switching. |
+| Service lifecycle and health reporting | ✅ Implemented | `service_manager.go`, `health_service.go`, `daemon/internal/api/{health,services}_rpc.go`, and `daemon/internal/host/ubuntu/systemd/manager.go` match the intended boundary. |
+| Client shell readiness | ✅ Implemented | `client/wails` is now verifiable from repo state with checked-in sums and opt-in `systray` integration. |
 
 ---
 
 ### Coherence (Design)
-
 | Decision | Followed? | Notes |
 |----------|-----------|-------|
-| Daemon + client split | ✅ Yes | Client remains scaffold-only while backend owns orchestration. |
-| Unix socket + HTTP/JSON IPC | ✅ Yes | `daemon/cmd/lara-nuxd/main.go` binds the Unix socket and serves HTTP handlers. |
-| Shared contracts for client/backend seam | ✅ Yes | `shared/contracts/rpc/v1/*` now documents and schemas the UI-facing seam. |
-| Ubuntu adapter boundaries | ✅ Yes | Host integrations remain isolated under `daemon/internal/host/ubuntu/*`. |
+| Daemon + client split | ✅ Yes | `daemon/`, `client/`, and `shared/contracts/` reflect the intended split. |
+| Unix socket + HTTP/JSON IPC | ✅ Yes | `daemon/cmd/lara-nuxd/main.go` binds a Unix socket and serves HTTP handlers. |
+| Caddy for local web/TLS | ✅ Yes | Ubuntu web adapter is implemented under `daemon/internal/host/ubuntu/caddy`. |
+| systemd-resolved managed `.test` stub | ✅ Yes | Implemented under `daemon/internal/host/ubuntu/resolved`. |
+| systemd system units | ✅ Yes | Service control is behind `daemon/internal/host/ubuntu/systemd`. |
+| Dedicated daemon system account | ⚠️ Deviated | Packaging still runs the daemon service as `root` in `packaging/ubuntu/systemd/lara-nuxd.service`, even though maintainer scripts create `lara-nuxd`. |
+| Signed `.deb` release path | ⚠️ Deferred honestly | Repo metadata/workflows exist, but release signing is still intentionally unfinished. |
 
 ---
 
 ### Issues Found
 
-**CRITICAL**
+**CRITICAL** (must fix before archive):
+1. **Task 6.3 remains incomplete and still blocks archive.** The repo does not yet execute the required install -> register site -> browse HTTPS -> switch PHP -> uninstall workflow on real Ubuntu 22.04 and 24.04 environments.
 
-None.
+**WARNING** (should fix):
+1. `testing/e2e/ubuntu/managed_workflow_test.go` materially improves evidence by exercising real host managers against temporary filesystem fixtures, but it still does not prove literal VM/container-backed Ubuntu behavior or an actual browser/HTTPS request.
+2. The packaged daemon still runs as `root`, which deviates from the design goal of a dedicated daemon account.
+3. Release signing remains intentionally unfinished (`SignWith: CHANGE_ME`, missing configured secrets), so release hardening is not production-ready yet.
 
-**WARNING**
-
-1. **Packaging/uninstall behavior is still not executable, only modeled.**
-   - Spec scenario `environment-bootstrap -> Safe uninstall` remains only partially satisfied.
-   - Evidence: packaging assets are still placeholders in `packaging/ubuntu/systemd/.gitkeep`, `packaging/ubuntu/scripts/.gitkeep`, and `packaging/ubuntu/debian/.gitkeep`.
-
-2. **Coverage remains thin in several daemon packages that the Phase 4 UI will indirectly depend on.**
-   - `go test -cover ./...` reports 0.0% for `daemon/cmd/lara-nuxd`, `daemon/internal/host/ubuntu/caddy`, `daemon/internal/host/ubuntu/packages`, `daemon/internal/host/ubuntu/php`, and `daemon/internal/host/ubuntu/systemd`.
-   - This is not a pre-UI blocker, but it increases regression risk while the UI starts consuming the daemon.
-
-**SUGGESTION**
-
-1. **Add request/response golden tests for shared contracts before Phase 4 expands the client surface.**
-   - Evidence: transport coverage exists in `daemon/internal/api/router_test.go`, but contract compatibility is still validated only indirectly.
-
-2. **Add adapter-focused tests for Caddy/PHP/package/systemd managers before Phase 5 packaging.**
-   - Evidence: no `*_test.go` files currently exist under `daemon/internal/host/ubuntu/caddy`, `php`, `packages`, or `systemd`.
+**SUGGESTION** (nice to have):
+1. Add real Jammy/Noble VM or container-backed E2E jobs that execute the full install/serve/switch/uninstall flow.
+2. Add explicit HTTPS request assertions in the future real E2E layer rather than inferring behavior from generated config and activation metadata.
 
 ---
 
 ### Verdict
 
-**PASS WITH WARNINGS for Phase 4 readiness.**
+**FAIL**
 
-The previous two blockers are resolved: the daemon now exposes site list/get/update and runtime read-model endpoints, shared contracts encode those DTOs, and router tests cover the new transport surface. No new critical blocker was found for starting Phase 4 UI work; the remaining concerns are packaging/uninstall completeness and broader backend test depth.
+The previous `client/wails` verification blocker is fixed, and task 6.3 is now represented honestly as incomplete, but the change is **still not ready to archive** because the remaining core E2E requirement in 6.3 has not been delivered yet.

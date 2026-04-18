@@ -178,7 +178,7 @@ func newE2EDeps(t *testing.T, scenario workflowScenario) *e2eDeps {
 		sites:       sites,
 		runtimes:    runtimes,
 		services:    services,
-		phpManager:  app.NewPHPManager(sites, runtimes, services, php),
+		phpManager:  app.NewPHPManager(sites, runtimes, services, php, web),
 		activation:  app.NewSiteActivationService(sites, runtimes, resolver, web, php, services),
 		siteMgmt:    app.NewSiteManagementService(sites, runtimes, web, php, services),
 		health:      app.NewHealthService(sites, runtimes, services, resolver, filepath.Join(dir, "lara-nux.sock")),

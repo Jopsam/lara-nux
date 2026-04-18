@@ -36,7 +36,7 @@
 
 - [x] 6.1 Add unit tests in `daemon/internal/app/*_test.*` for Laravel validation, duplicate-domain rejection, supported-runtime rules, and health/conflict mapping.
 - [x] 6.2 Add adapter integration fixtures in `daemon/internal/host/ubuntu/*/testdata/` plus tests for resolver conflicts, Caddy render/reload, PHP-FPM switching, and package verification.
-- [x] 6.3 Add end-to-end coverage in `testing/e2e/ubuntu/*` for install -> register site -> browse HTTPS -> switch PHP -> uninstall on Ubuntu 22.04 and 24.04.
+- [ ] 6.3 Add end-to-end coverage in `testing/e2e/ubuntu/*` for install -> register site -> browse HTTPS -> switch PHP -> uninstall on Ubuntu 22.04 and 24.04.
 
 ## Phase 7: OSS / Release Hardening
 

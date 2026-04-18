@@ -232,7 +232,7 @@ func newRouterTestDeps(t *testing.T) *routerTestDeps {
 		sites:       sites,
 		runtimes:    runtimes,
 		services:    serviceManager,
-		phpManager:  app.NewPHPManager(sites, runtimes, serviceManager, fakePHP),
+		phpManager:  app.NewPHPManager(sites, runtimes, serviceManager, fakePHP, fakeWeb),
 		activation:  app.NewSiteActivationService(sites, runtimes, fakeResolver, fakeWeb, fakePHP, serviceManager),
 		siteMgmt:    app.NewSiteManagementService(sites, runtimes, fakeWeb, fakePHP, serviceManager),
 		onboarding:  app.NewRuntimeOnboardingService(runtimes, fakePackages, runtimes, fakePHP, serviceManager),

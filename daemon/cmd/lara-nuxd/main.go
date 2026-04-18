@@ -104,7 +104,7 @@ func main() {
 	webManager := caddyhost.NewManager(caddyhost.Config{})
 	hostPHPManager := phphost.NewManager(phphost.Config{})
 	packageManager := packageshost.NewManager(packageshost.Config{})
-	phpManager := app.NewPHPManager(siteRegistry, phpRegistry, serviceManager, hostPHPManager)
+	phpManager := app.NewPHPManager(siteRegistry, phpRegistry, serviceManager, hostPHPManager, webManager)
 	siteActivation := app.NewSiteActivationService(siteRegistry, phpRegistry, resolverManager, webManager, hostPHPManager, serviceManager)
 	siteManagement := app.NewSiteManagementService(siteRegistry, phpRegistry, webManager, hostPHPManager, serviceManager)
 	runtimeOnboarding := app.NewRuntimeOnboardingService(phpRegistry, packageManager, phpRegistry, hostPHPManager, serviceManager)

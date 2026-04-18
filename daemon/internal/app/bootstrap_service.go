@@ -20,7 +20,11 @@ type AppPaths struct {
 }
 
 type BootstrapService struct {
-	paths AppPaths
+	paths         AppPaths
+	osReleasePath string
+	lookPath      func(string) (string, error)
+	geteuid       func() int
+	groupExists   func(string) bool
 }
 
 type UbuntuRelease struct {
@@ -45,7 +49,13 @@ type BootstrapReport struct {
 }
 
 func NewBootstrapService(paths AppPaths) *BootstrapService {
-	return &BootstrapService{paths: paths}
+	return &BootstrapService{
+		paths:         paths,
+		osReleasePath: "/etc/os-release",
+		lookPath:      exec.LookPath,
+		geteuid:       os.Geteuid,
+		groupExists:   groupExists,
+	}
 }
 
 func LoadPathsFromEnv() AppPaths {
@@ -74,7 +84,7 @@ func (s *BootstrapService) Preflight(ctx context.Context) (BootstrapReport, erro
 	default:
 	}
 
-	release, err := readOSRelease("/etc/os-release")
+	release, err := readOSRelease(s.osReleasePath)
 	if err != nil {
 		report.addCheck("os-release", false, "Unable to read Ubuntu release metadata.", "Ensure /etc/os-release exists and the daemon runs on a supported Ubuntu host.")
 		return report, fmt.Errorf("bootstrap preflight failed: %w", report.ErrorOr(err))
@@ -83,11 +93,11 @@ func (s *BootstrapService) Preflight(ctx context.Context) (BootstrapReport, erro
 	report.Host = release
 	report.addCheck("ubuntu-host", release.ID == "ubuntu", fmt.Sprintf("Detected host %s %s.", release.ID, release.VersionID), "Run Lara Nux only on supported Ubuntu LTS releases.")
 	report.addCheck("ubuntu-release", supportedUbuntuRelease(release.VersionID), fmt.Sprintf("Ubuntu release %s is within the supported matrix.", release.VersionID), "Use Ubuntu 22.04 or 24.04 for v1 support.")
-	report.addCheck("privileges", os.Geteuid() == 0, "Daemon has the privileges required for system bootstrap.", "Install and run the daemon through a privileged systemd unit or elevated installer helper.")
-	report.addCheck("daemon-group", groupExists("lara-nux"), "The lara-nux operator group exists for socket access control.", "Create the lara-nux system group before starting the daemon so client access can be mediated through Unix socket permissions.")
+	report.addCheck("privileges", s.geteuid() == 0, "Daemon has the privileges required for system bootstrap.", "Install and run the daemon through a privileged systemd unit or elevated installer helper.")
+	report.addCheck("daemon-group", s.groupExists("lara-nux"), "The lara-nux operator group exists for socket access control.", "Create the lara-nux system group before starting the daemon so client access can be mediated through Unix socket permissions.")
 
 	for _, dependency := range []string{"systemctl", "resolvectl"} {
-		_, depErr := exec.LookPath(dependency)
+		_, depErr := s.lookPath(dependency)
 		report.addCheck(
 			"dependency-"+dependency,
 			depErr == nil,
