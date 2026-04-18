@@ -1,0 +1,58 @@
+.vscode/
+.idea/
+.atl/
+.sdd/
+
+# OS / editor noise
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+
+# Node / frontend artifacts
+node_modules/
+.nuxt/
+.output/
+.vercel/
+dist/
+build/
+coverage/
+storybook-static/
+
+# Caches / temp
+.cache/
+.tmp/
+tmp/
+temp/
+*.tmp
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Environment / local overrides
+.env
+.env.*
+!.env.example
+
+# Go artifacts
+bin/
+*.test
+*.coverprofile
+coverage.out
+
+# Generic binaries / archives
+*.exe
+*.dll
+*.so
+*.dylib
+*.a
+*.o
+*.out
+*.zip
+*.tar
+*.gz

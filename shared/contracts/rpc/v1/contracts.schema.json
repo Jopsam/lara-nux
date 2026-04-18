@@ -1,0 +1,522 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://jopsam.github.io/lara-nux/contracts/rpc/v1/contracts.schema.json",
+  "title": "Lara Nux RPC Contracts v1",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "endpoints": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "health": {
+          "type": "object",
+          "properties": {
+            "method": { "const": "GET" },
+            "path": { "const": "/rpc/health" },
+            "response": { "$ref": "#/$defs/HealthReportEnvelope" }
+          },
+          "required": ["method", "path", "response"]
+        },
+        "sites.register": {
+          "type": "object",
+          "properties": {
+            "method": { "const": "POST" },
+            "path": { "const": "/rpc/sites.register" },
+            "request": { "$ref": "#/$defs/RegisterSiteRequest" },
+            "response": { "$ref": "#/$defs/ActivationResultEnvelope" }
+          },
+          "required": ["method", "path", "request", "response"]
+        },
+        "sites.list": {
+          "type": "object",
+          "properties": {
+            "method": { "const": "GET" },
+            "path": { "const": "/rpc/sites.list" },
+            "response": { "$ref": "#/$defs/SiteListEnvelope" }
+          },
+          "required": ["method", "path", "response"]
+        },
+        "sites.get": {
+          "type": "object",
+          "properties": {
+            "method": { "const": "GET" },
+            "path": { "const": "/rpc/sites.get" },
+            "request": { "$ref": "#/$defs/GetSiteRequest" },
+            "response": { "$ref": "#/$defs/SiteRecordEnvelope" }
+          },
+          "required": ["method", "path", "request", "response"]
+        },
+        "sites.update": {
+          "type": "object",
+          "properties": {
+            "method": { "const": "POST" },
+            "path": { "const": "/rpc/sites.update" },
+            "request": { "$ref": "#/$defs/UpdateSiteRequest" },
+            "response": { "$ref": "#/$defs/SiteRecordEnvelope" }
+          },
+          "required": ["method", "path", "request", "response"]
+        },
+        "php.list": {
+          "type": "object",
+          "properties": {
+            "method": { "const": "GET" },
+            "path": { "const": "/rpc/php.list" },
+            "response": { "$ref": "#/$defs/PHPRuntimeListEnvelope" }
+          },
+          "required": ["method", "path", "response"]
+        },
+        "php.default.get": {
+          "type": "object",
+          "properties": {
+            "method": { "const": "GET" },
+            "path": { "const": "/rpc/php.default" },
+            "response": { "$ref": "#/$defs/DefaultRuntimeEnvelope" }
+          },
+          "required": ["method", "path", "response"]
+        },
+        "php.default.set": {
+          "type": "object",
+          "properties": {
+            "method": { "const": "POST" },
+            "path": { "const": "/rpc/php.default" },
+            "request": { "$ref": "#/$defs/SetDefaultPHPRequest" },
+            "response": { "$ref": "#/$defs/DefaultRuntimeEnvelope" }
+          },
+          "required": ["method", "path", "request", "response"]
+        },
+        "php.inventory": {
+          "type": "object",
+          "properties": {
+            "method": { "const": "GET" },
+            "path": { "const": "/rpc/php.inventory" },
+            "response": { "$ref": "#/$defs/RuntimeCatalogEnvelope" }
+          },
+          "required": ["method", "path", "response"]
+        },
+        "php.register": {
+          "type": "object",
+          "properties": {
+            "method": { "const": "POST" },
+            "path": { "const": "/rpc/php.register" },
+            "request": { "$ref": "#/$defs/RegisterPHPRequest" },
+            "response": { "$ref": "#/$defs/RuntimeRegistrationResultEnvelope" }
+          },
+          "required": ["method", "path", "request", "response"]
+        },
+        "php.switch": {
+          "type": "object",
+          "properties": {
+            "method": { "const": "POST" },
+            "path": { "const": "/rpc/php.switch" },
+            "request": { "$ref": "#/$defs/SwitchPHPRequest" },
+            "response": { "$ref": "#/$defs/SiteRecordEnvelope" }
+          },
+          "required": ["method", "path", "request", "response"]
+        },
+        "services.action": {
+          "type": "object",
+          "properties": {
+            "method": { "const": "POST" },
+            "path": { "const": "/rpc/services.action" },
+            "request": { "$ref": "#/$defs/ServiceActionRequest" },
+            "response": { "$ref": "#/$defs/ServiceStatusEnvelope" }
+          },
+          "required": ["method", "path", "request", "response"]
+        }
+      },
+      "required": ["health", "sites.register", "sites.list", "sites.get", "sites.update", "php.list", "php.default.get", "php.default.set", "php.inventory", "php.register", "php.switch", "services.action"]
+    }
+  },
+  "required": ["endpoints"],
+  "$defs": {
+    "Timestamp": { "type": "string", "format": "date-time" },
+    "RpcError": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "code": { "type": "string" },
+        "message": { "type": "string" }
+      },
+      "required": ["code", "message"]
+    },
+    "Conflict": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "resource": { "type": "string" },
+        "owner": { "type": "string" },
+        "summary": { "type": "string" },
+        "remediation": { "type": "string" }
+      },
+      "required": ["resource", "summary"]
+    },
+    "ResolverStatus": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "managed": { "type": "boolean" },
+        "stubPath": { "type": "string" },
+        "domain": { "type": "string" },
+        "address": { "type": "string" },
+        "owner": { "type": "string" },
+        "conflicts": { "type": "array", "items": { "$ref": "#/$defs/Conflict" } },
+        "summary": { "type": "string" },
+        "remediation": { "type": "string" }
+      },
+      "required": ["managed", "stubPath", "domain", "address", "owner", "summary"]
+    },
+    "ServiceStatus": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "service": { "type": "string" },
+        "state": { "enum": ["active", "inactive", "failed", "unknown"] },
+        "summary": { "type": "string" },
+        "updatedAt": { "$ref": "#/$defs/Timestamp" }
+      },
+      "required": ["service", "state", "summary", "updatedAt"]
+    },
+    "SiteRecord": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "rootPath": { "type": "string" },
+        "domain": { "type": "string" },
+        "phpVersion": { "type": "string" },
+        "tls": { "const": "auto" },
+        "status": { "enum": ["ready", "degraded", "conflict"] },
+        "statusMessage": { "type": "string" },
+        "createdAt": { "$ref": "#/$defs/Timestamp" },
+        "updatedAt": { "$ref": "#/$defs/Timestamp" },
+        "lastCheckedAt": { "$ref": "#/$defs/Timestamp" }
+      },
+      "required": ["id", "name", "rootPath", "domain", "phpVersion", "tls", "status", "createdAt", "updatedAt"]
+    },
+    "PHPRuntimeRecord": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "version": { "type": "string" },
+        "binaryPath": { "type": "string" },
+        "fpmService": { "type": "string" },
+        "source": { "type": "string" },
+        "registeredAt": { "$ref": "#/$defs/Timestamp" }
+      },
+      "required": ["version", "binaryPath", "fpmService", "registeredAt"]
+    },
+    "SupportedPackage": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "key": { "type": "string" },
+        "description": { "type": "string" },
+        "runtimeVersion": { "type": "string" },
+        "packages": { "type": "array", "items": { "type": "string" } }
+      },
+      "required": ["key", "description", "packages"]
+    },
+    "DetectedPHPRuntime": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "version": { "type": "string" },
+        "binaryPath": { "type": "string" },
+        "fpmBinaryPath": { "type": "string" },
+        "serviceName": { "type": "string" },
+        "socketPath": { "type": "string" }
+      },
+      "required": ["version"]
+    },
+    "PHPMaterialization": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "version": { "type": "string" },
+        "serviceName": { "type": "string" },
+        "socketPath": { "type": "string" },
+        "poolConfigPath": { "type": "string" },
+        "overridePath": { "type": "string" },
+        "active": { "type": "boolean" }
+      },
+      "required": ["version", "serviceName", "socketPath", "poolConfigPath", "overridePath", "active"]
+    },
+    "WebActivationResult": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "configPath": { "type": "string" },
+        "validated": { "type": "boolean" },
+        "reloaded": { "type": "boolean" },
+        "httpUrl": { "type": "string" },
+        "httpsUrl": { "type": "string" }
+      },
+      "required": ["configPath", "validated", "reloaded", "httpUrl", "httpsUrl"]
+    },
+    "SocketAvailability": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "path": { "type": "string" },
+        "available": { "type": "boolean" },
+        "summary": { "type": "string" }
+      },
+      "required": ["path", "available", "summary"]
+    },
+    "HealthCheck": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "name": { "type": "string" },
+        "capability": { "type": "string" },
+        "passed": { "type": "boolean" },
+        "summary": { "type": "string" },
+        "remediation": { "type": "string" }
+      },
+      "required": ["name", "capability", "passed", "summary"]
+    },
+    "SiteReadiness": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "site": { "$ref": "#/$defs/SiteRecord" },
+        "ready": { "type": "boolean" },
+        "summary": { "type": "string" },
+        "checks": { "type": "array", "items": { "$ref": "#/$defs/HealthCheck" } },
+        "phpService": { "$ref": "#/$defs/ServiceStatus" },
+        "checkedAt": { "$ref": "#/$defs/Timestamp" }
+      },
+      "required": ["site", "ready", "summary", "checks", "phpService", "checkedAt"]
+    },
+    "HealthReport": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "ready": { "type": "boolean" },
+        "generatedAt": { "$ref": "#/$defs/Timestamp" },
+        "socket": { "$ref": "#/$defs/SocketAvailability" },
+        "resolver": { "$ref": "#/$defs/ResolverStatus" },
+        "checks": { "type": "array", "items": { "$ref": "#/$defs/HealthCheck" } },
+        "services": { "type": "array", "items": { "$ref": "#/$defs/ServiceStatus" } },
+        "sites": { "type": "array", "items": { "$ref": "#/$defs/SiteReadiness" } }
+      },
+      "required": ["ready", "generatedAt", "socket", "checks", "services", "sites"]
+    },
+    "RegisterSiteRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "rootPath": { "type": "string" },
+        "domain": { "type": "string" },
+        "phpVersion": { "type": "string" }
+      },
+      "required": ["rootPath"]
+    },
+    "GetSiteRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "siteId": { "type": "string" }
+      },
+      "required": ["siteId"]
+    },
+    "UpdateSiteRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "siteId": { "type": "string" },
+        "rootPath": { "type": "string" },
+        "domain": { "type": "string" },
+        "phpVersion": { "type": "string" }
+      },
+      "required": ["siteId"]
+    },
+    "ActivationResult": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "site": { "$ref": "#/$defs/SiteRecord" },
+        "resolver": { "$ref": "#/$defs/ResolverStatus" },
+        "runtime": { "$ref": "#/$defs/PHPRuntimeRecord" },
+        "materialization": { "$ref": "#/$defs/PHPMaterialization" },
+        "web": { "$ref": "#/$defs/WebActivationResult" },
+        "services": { "type": "array", "items": { "$ref": "#/$defs/ServiceStatus" } },
+        "activatedAt": { "$ref": "#/$defs/Timestamp" }
+      },
+      "required": ["site", "resolver", "runtime", "materialization", "web", "services", "activatedAt"]
+    },
+    "RegisterPHPRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "version": { "type": "string" },
+        "binaryPath": { "type": "string" },
+        "fpmService": { "type": "string" },
+        "source": { "type": "string" },
+        "packageKey": { "type": "string" }
+      }
+    },
+    "RuntimeRegistrationResult": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "runtime": { "$ref": "#/$defs/PHPRuntimeRecord" },
+        "materialization": { "$ref": "#/$defs/PHPMaterialization" },
+        "installedFrom": { "type": "string" },
+        "refreshed": { "type": "boolean" }
+      },
+      "required": ["runtime", "refreshed"]
+    },
+    "SwitchPHPRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "siteId": { "type": "string" },
+        "phpVersion": { "type": "string" }
+      },
+      "required": ["siteId", "phpVersion"]
+    },
+    "SetDefaultPHPRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "version": { "type": "string" }
+      },
+      "required": ["version"]
+    },
+    "DefaultRuntimeResponse": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "runtime": {
+          "oneOf": [
+            { "$ref": "#/$defs/PHPRuntimeRecord" },
+            { "type": "null" }
+          ]
+        }
+      },
+      "required": ["runtime"]
+    },
+    "RuntimeCatalog": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "registered": { "type": "array", "items": { "$ref": "#/$defs/PHPRuntimeRecord" } },
+        "defaultRuntime": { "$ref": "#/$defs/PHPRuntimeRecord" },
+        "supportedPackages": { "type": "array", "items": { "$ref": "#/$defs/SupportedPackage" } },
+        "detectedRuntimes": { "type": "array", "items": { "$ref": "#/$defs/DetectedPHPRuntime" } }
+      },
+      "required": ["registered", "supportedPackages", "detectedRuntimes"]
+    },
+    "ServiceActionRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "service": { "type": "string" },
+        "action": { "enum": ["start", "stop", "restart", "status"] }
+      },
+      "required": ["service", "action"]
+    },
+    "HealthReportEnvelope": { "$ref": "#/$defs/SuccessEnvelopeHealthReport" },
+    "ActivationResultEnvelope": { "$ref": "#/$defs/SuccessEnvelopeActivationResult" },
+    "RuntimeRegistrationResultEnvelope": { "$ref": "#/$defs/SuccessEnvelopeRuntimeRegistrationResult" },
+    "SiteRecordEnvelope": { "$ref": "#/$defs/SuccessEnvelopeSiteRecord" },
+    "SiteListEnvelope": { "$ref": "#/$defs/SuccessEnvelopeSiteList" },
+    "PHPRuntimeListEnvelope": { "$ref": "#/$defs/SuccessEnvelopePHPRuntimeList" },
+    "DefaultRuntimeEnvelope": { "$ref": "#/$defs/SuccessEnvelopeDefaultRuntime" },
+    "RuntimeCatalogEnvelope": { "$ref": "#/$defs/SuccessEnvelopeRuntimeCatalog" },
+    "ServiceStatusEnvelope": { "$ref": "#/$defs/SuccessEnvelopeServiceStatus" },
+    "SuccessEnvelopeHealthReport": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "ok": { "const": true },
+        "data": { "$ref": "#/$defs/HealthReport" }
+      },
+      "required": ["ok", "data"]
+    },
+    "SuccessEnvelopeActivationResult": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "ok": { "const": true },
+        "data": { "$ref": "#/$defs/ActivationResult" }
+      },
+      "required": ["ok", "data"]
+    },
+    "SuccessEnvelopeRuntimeRegistrationResult": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "ok": { "const": true },
+        "data": { "$ref": "#/$defs/RuntimeRegistrationResult" }
+      },
+      "required": ["ok", "data"]
+    },
+    "SuccessEnvelopeSiteRecord": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "ok": { "const": true },
+        "data": { "$ref": "#/$defs/SiteRecord" }
+      },
+      "required": ["ok", "data"]
+    },
+    "SuccessEnvelopeSiteList": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "ok": { "const": true },
+        "data": { "type": "array", "items": { "$ref": "#/$defs/SiteRecord" } }
+      },
+      "required": ["ok", "data"]
+    },
+    "SuccessEnvelopePHPRuntimeList": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "ok": { "const": true },
+        "data": { "type": "array", "items": { "$ref": "#/$defs/PHPRuntimeRecord" } }
+      },
+      "required": ["ok", "data"]
+    },
+    "SuccessEnvelopeDefaultRuntime": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "ok": { "const": true },
+        "data": { "$ref": "#/$defs/DefaultRuntimeResponse" }
+      },
+      "required": ["ok", "data"]
+    },
+    "SuccessEnvelopeRuntimeCatalog": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "ok": { "const": true },
+        "data": { "$ref": "#/$defs/RuntimeCatalog" }
+      },
+      "required": ["ok", "data"]
+    },
+    "SuccessEnvelopeServiceStatus": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "ok": { "const": true },
+        "data": { "$ref": "#/$defs/ServiceStatus" }
+      },
+      "required": ["ok", "data"]
+    },
+    "ErrorEnvelope": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "ok": { "const": false },
+        "error": { "$ref": "#/$defs/RpcError" }
+      },
+      "required": ["ok", "error"]
+    }
+  }
+}
