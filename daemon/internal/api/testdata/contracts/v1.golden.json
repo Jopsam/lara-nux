@@ -1,0 +1,293 @@
+{
+  "sites.register.request": {
+    "rootPath": "__PROJECT_C__",
+    "phpVersion": "8.2"
+  },
+  "sites.register.response": {
+    "ok": true,
+    "data": {
+      "site": {
+        "id": "__SITE_ID__",
+        "name": "charlie",
+        "rootPath": "__PROJECT_C__",
+        "domain": "charlie.test",
+        "phpVersion": "8.2",
+        "tls": "auto",
+        "status": "ready",
+        "statusMessage": "Site activated at https://charlie.test with PHP 8.2.",
+        "createdAt": "__TIMESTAMP__",
+        "updatedAt": "__TIMESTAMP__",
+        "lastCheckedAt": "__TIMESTAMP__"
+      },
+      "resolver": {
+        "managed": true,
+        "stubPath": "/etc/systemd/resolved.conf.d/lara-nux-test.conf",
+        "domain": "test",
+        "address": "127.0.0.1",
+        "owner": "lara-nux",
+        "summary": "managed"
+      },
+      "runtime": {
+        "version": "8.2",
+        "binaryPath": "__PHP82_BINARY__",
+        "fpmService": "php8.2-fpm",
+        "source": "test",
+        "registeredAt": "__TIMESTAMP__"
+      },
+      "materialization": {
+        "version": "8.2",
+        "serviceName": "php8.2-fpm",
+        "socketPath": "/run/php/lara-nux-php8.2-fpm.sock",
+        "poolConfigPath": "/tmp/pool.conf",
+        "overridePath": "/tmp/override.conf",
+        "active": true
+      },
+      "web": {
+        "configPath": "/tmp/site.caddy",
+        "validated": true,
+        "reloaded": true,
+        "httpUrl": "http://example.test",
+        "httpsUrl": "https://example.test"
+      },
+      "services": [
+        {
+          "service": "caddy",
+          "state": "active",
+          "summary": "start",
+          "updatedAt": "__TIMESTAMP__"
+        },
+        {
+          "service": "php8.2-fpm",
+          "state": "active",
+          "summary": "start",
+          "updatedAt": "__TIMESTAMP__"
+        }
+      ],
+      "activatedAt": "__TIMESTAMP__"
+    }
+  },
+  "sites.list.response": {
+    "ok": true,
+    "data": [
+      {
+        "id": "__SITE_A_ID__",
+        "name": "alpha",
+        "rootPath": "__PROJECT_A__",
+        "domain": "alpha.test",
+        "phpVersion": "8.2",
+        "tls": "auto",
+        "status": "ready",
+        "statusMessage": "Site registered and ready for orchestration.",
+        "createdAt": "__TIMESTAMP__",
+        "updatedAt": "__TIMESTAMP__",
+        "lastCheckedAt": "__TIMESTAMP__"
+      },
+      {
+        "id": "__SITE_B_ID__",
+        "name": "bravo",
+        "rootPath": "__PROJECT_B__",
+        "domain": "bravo.test",
+        "phpVersion": "8.2",
+        "tls": "auto",
+        "status": "ready",
+        "statusMessage": "Site registered and ready for orchestration.",
+        "createdAt": "__TIMESTAMP__",
+        "updatedAt": "__TIMESTAMP__",
+        "lastCheckedAt": "__TIMESTAMP__"
+      }
+    ]
+  },
+  "sites.get.request": {
+    "siteId": "__SITE_A_ID__"
+  },
+  "sites.get.response": {
+    "ok": true,
+    "data": {
+      "id": "__SITE_A_ID__",
+      "name": "alpha",
+      "rootPath": "__PROJECT_A__",
+      "domain": "alpha.test",
+      "phpVersion": "8.2",
+      "tls": "auto",
+      "status": "ready",
+      "statusMessage": "Site registered and ready for orchestration.",
+      "createdAt": "__TIMESTAMP__",
+      "updatedAt": "__TIMESTAMP__",
+      "lastCheckedAt": "__TIMESTAMP__"
+    }
+  },
+  "sites.update.request": {
+    "siteId": "__SITE_A_ID__",
+    "domain": "alpha-updated.test",
+    "phpVersion": "8.3"
+  },
+  "sites.update.response": {
+    "ok": true,
+    "data": {
+      "id": "__SITE_A_ID__",
+      "name": "alpha",
+      "rootPath": "__PROJECT_A__",
+      "domain": "alpha-updated.test",
+      "phpVersion": "8.3",
+      "tls": "auto",
+      "status": "ready",
+      "statusMessage": "Site updated and ready at https://alpha-updated.test with PHP 8.3.",
+      "createdAt": "__TIMESTAMP__",
+      "updatedAt": "__TIMESTAMP__",
+      "lastCheckedAt": "__TIMESTAMP__"
+    }
+  },
+  "php.list.response": {
+    "ok": true,
+    "data": [
+      {
+        "version": "8.2",
+        "binaryPath": "__PHP82_BINARY__",
+        "fpmService": "php8.2-fpm",
+        "source": "test",
+        "registeredAt": "__TIMESTAMP__"
+      },
+      {
+        "version": "8.3",
+        "binaryPath": "__PHP83_BINARY__",
+        "fpmService": "php8.3-fpm",
+        "source": "test",
+        "registeredAt": "__TIMESTAMP__"
+      }
+    ]
+  },
+  "php.default.get.response": {
+    "ok": true,
+    "data": {
+      "runtime": {
+        "version": "8.2",
+        "binaryPath": "__PHP82_BINARY__",
+        "fpmService": "php8.2-fpm",
+        "source": "test",
+        "registeredAt": "__TIMESTAMP__"
+      }
+    }
+  },
+  "php.default.set.request": {
+    "version": "8.3"
+  },
+  "php.default.set.response": {
+    "ok": true,
+    "data": {
+      "runtime": {
+        "version": "8.3",
+        "binaryPath": "__PHP83_BINARY__",
+        "fpmService": "php8.3-fpm",
+        "source": "test",
+        "registeredAt": "__TIMESTAMP__"
+      }
+    }
+  },
+  "php.inventory.response": {
+    "ok": true,
+    "data": {
+      "registered": [
+        {
+          "version": "8.2",
+          "binaryPath": "__PHP82_BINARY__",
+          "fpmService": "php8.2-fpm",
+          "source": "test",
+          "registeredAt": "__TIMESTAMP__"
+        },
+        {
+          "version": "8.3",
+          "binaryPath": "__PHP83_BINARY__",
+          "fpmService": "php8.3-fpm",
+          "source": "test",
+          "registeredAt": "__TIMESTAMP__"
+        }
+      ],
+      "defaultRuntime": {
+        "version": "8.2",
+        "binaryPath": "__PHP82_BINARY__",
+        "fpmService": "php8.2-fpm",
+        "source": "test",
+        "registeredAt": "__TIMESTAMP__"
+      },
+      "supportedPackages": [
+        {
+          "key": "php-8.2",
+          "description": "PHP 8.2",
+          "runtimeVersion": "8.2",
+          "packages": [
+            "php8.2",
+            "php8.2-fpm"
+          ]
+        }
+      ],
+      "detectedRuntimes": [
+        {
+          "version": "8.2",
+          "binaryPath": "/usr/bin/php8.2",
+          "fpmBinaryPath": "/usr/sbin/php-fpm8.2",
+          "serviceName": "php8.2-fpm",
+          "socketPath": "/run/php/lara-nux-php8.2-fpm.sock"
+        }
+      ]
+    }
+  },
+  "php.register.request": {
+    "version": "8.4",
+    "binaryPath": "__PHP84_BINARY__",
+    "source": "manual"
+  },
+  "php.register.response": {
+    "ok": true,
+    "data": {
+      "runtime": {
+        "version": "8.4",
+        "binaryPath": "__PHP84_BINARY__",
+        "fpmService": "php8.4-fpm",
+        "source": "manual",
+        "registeredAt": "__TIMESTAMP__"
+      },
+      "materialization": {
+        "version": "8.4",
+        "serviceName": "php8.4-fpm",
+        "socketPath": "/run/php/lara-nux-php8.4-fpm.sock",
+        "poolConfigPath": "/tmp/pool.conf",
+        "overridePath": "/tmp/override.conf",
+        "active": true
+      },
+      "refreshed": false
+    }
+  },
+  "php.switch.request": {
+    "siteId": "__SITE_A_ID__",
+    "phpVersion": "8.3"
+  },
+  "php.switch.response": {
+    "ok": true,
+    "data": {
+      "id": "__SITE_A_ID__",
+      "name": "alpha",
+      "rootPath": "__PROJECT_A__",
+      "domain": "alpha.test",
+      "phpVersion": "8.3",
+      "tls": "auto",
+      "status": "ready",
+      "statusMessage": "Site switched to PHP 8.3.",
+      "createdAt": "__TIMESTAMP__",
+      "updatedAt": "__TIMESTAMP__",
+      "lastCheckedAt": "__TIMESTAMP__"
+    }
+  },
+  "services.action.request": {
+    "service": "caddy",
+    "action": "restart"
+  },
+  "services.action.response": {
+    "ok": true,
+    "data": {
+      "service": "caddy",
+      "state": "active",
+      "summary": "restart",
+      "updatedAt": "__TIMESTAMP__"
+    }
+  }
+}

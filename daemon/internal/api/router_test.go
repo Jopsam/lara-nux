@@ -9,8 +9,10 @@ import (
 	"net/http/httptest"
 	"os"
 	"path/filepath"
+	"reflect"
 	"testing"
 	"time"
+	"unsafe"
 
 	"github.com/jopsam/lara-nux/daemon/internal/app"
 	"github.com/jopsam/lara-nux/daemon/internal/host"
@@ -185,6 +187,18 @@ func newRouterTestDeps(t *testing.T) *routerTestDeps {
 	dir := t.TempDir()
 	sites := app.NewSiteRegistry(filepath.Join(dir, "sites.json"))
 	runtimes := app.NewPHPRegistry(filepath.Join(dir, "runtimes.json"))
+	setPHPRegistryRun(t, runtimes, func(_ context.Context, binaryPath string, _ ...string) (string, error) {
+		switch filepath.Base(binaryPath) {
+		case "php82":
+			return "8.2", nil
+		case "php83":
+			return "8.3", nil
+		case "php84":
+			return "8.4", nil
+		default:
+			return "", errors.New("unknown test php binary")
+		}
+	})
 
 	binary82 := filepath.Join(dir, "php82")
 	writeVersionExecutable(t, binary82, "8.2")
@@ -309,18 +323,28 @@ func createLaravelProject(t *testing.T, path string) string {
 
 func writeVersionExecutable(t *testing.T, path string, version string) {
 	t.Helper()
-	if err := os.WriteFile(path, []byte("#!/bin/sh\nprintf '"+version+"'\n"), 0o755); err != nil {
+	tempPath := path + ".tmp"
+	if err := os.WriteFile(tempPath, []byte("#!/bin/sh\nprintf '"+version+"'\n"), 0o755); err != nil {
 		t.Fatalf("write executable: %v", err)
 	}
+	if err := os.Rename(tempPath, path); err != nil {
+		t.Fatalf("rename executable: %v", err)
+	}
+}
+
+func setPHPRegistryRun(t *testing.T, registry *app.PHPRegistry, run func(context.Context, string, ...string) (string, error)) {
+	t.Helper()
+	field := reflect.ValueOf(registry).Elem().FieldByName("run")
+	reflect.NewAt(field.Type(), unsafe.Pointer(field.UnsafeAddr())).Elem().Set(reflect.ValueOf(run))
 }
 
 type fakeResolverManager struct{}
 
 func (*fakeResolverManager) Inspect(context.Context, host.ResolverStubSpec) (host.ResolverStatus, error) {
-	return host.ResolverStatus{Managed: true, Owner: "lara-nux", Summary: "managed"}, nil
+	return host.ResolverStatus{Managed: true, StubPath: "/etc/systemd/resolved.conf.d/lara-nux-test.conf", Domain: "test", Address: "127.0.0.1", Owner: "lara-nux", Summary: "managed"}, nil
 }
 func (*fakeResolverManager) EnsureTestStub(context.Context, host.ResolverStubSpec) (host.ResolverStatus, error) {
-	return host.ResolverStatus{Managed: true, Owner: "lara-nux", Summary: "managed"}, nil
+	return host.ResolverStatus{Managed: true, StubPath: "/etc/systemd/resolved.conf.d/lara-nux-test.conf", Domain: "test", Address: "127.0.0.1", Owner: "lara-nux", Summary: "managed"}, nil
 }
 func (*fakeResolverManager) RemoveManagedStub(context.Context) error { return nil }
 
@@ -334,8 +358,20 @@ func (*fakeWebManager) Validate(context.Context) error           { return nil }
 
 type fakePHPManager struct{}
 
-func (*fakePHPManager) MaterializeRuntime(context.Context, host.PHPRuntime) (host.PHPMaterialization, error) {
-	return host.PHPMaterialization{Version: "8.2", ServiceName: "php-fpm", SocketPath: "/run/php/test.sock", PoolConfigPath: "/tmp/pool.conf", OverridePath: "/tmp/override.conf", Active: true}, nil
+func (*fakePHPManager) MaterializeRuntime(_ context.Context, runtime host.PHPRuntime) (host.PHPMaterialization, error) {
+	version := runtime.Version
+	if version == "" {
+		version = "8.2"
+	}
+	serviceName := runtime.ServiceName
+	if serviceName == "" {
+		serviceName = "php" + version + "-fpm"
+	}
+	socketPath := runtime.SocketPath
+	if socketPath == "" {
+		socketPath = "/run/php/lara-nux-php" + version + "-fpm.sock"
+	}
+	return host.PHPMaterialization{Version: version, ServiceName: serviceName, SocketPath: socketPath, PoolConfigPath: "/tmp/pool.conf", OverridePath: "/tmp/override.conf", Active: true}, nil
 }
 func (*fakePHPManager) SwitchRuntime(_ context.Context, request host.PHPSwitchRequest) (host.PHPMaterialization, error) {
 	return host.PHPMaterialization{Version: request.Target.Version, ServiceName: request.Target.ServiceName, SocketPath: request.Target.SocketPath, PoolConfigPath: "/tmp/pool.conf", OverridePath: "/tmp/override.conf", Active: true}, nil

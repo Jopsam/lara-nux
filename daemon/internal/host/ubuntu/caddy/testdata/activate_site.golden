@@ -1,0 +1,15 @@
+# Managed by Lara Nux
+http://__DOMAIN__ {
+	root * "__PUBLIC_DIR__"
+	encode zstd gzip
+	php_fastcgi unix/__PHP_SOCKET__
+	file_server
+}
+
+https://__DOMAIN__ {
+	tls internal
+	root * "__PUBLIC_DIR__"
+	encode zstd gzip
+	php_fastcgi unix/__PHP_SOCKET__
+	file_server
+}
