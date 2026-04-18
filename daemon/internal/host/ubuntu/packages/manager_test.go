@@ -4,6 +4,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 	"time"
@@ -15,16 +17,17 @@ func TestAcquireInstallsSupportedBundleAndVerifiesIt(t *testing.T) {
 	t.Parallel()
 
 	now := time.Date(2026, time.April, 18, 12, 0, 0, 0, time.UTC)
+	installedStatus := strings.TrimSpace(string(loadPackageFixture(t, "php82_installed.status")))
 	runner := &packageRunner{results: map[string]packageRunResult{
 		"apt-get install -y --no-install-recommends php8.2 php8.2-cli php8.2-fpm php8.2-curl php8.2-mbstring php8.2-xml php8.2-zip php8.2-sqlite3": {output: "ok"},
-		"dpkg-query -W -f=${Status}|${Version} php8.2":          {output: "install ok installed|8.2.12"},
-		"dpkg-query -W -f=${Status}|${Version} php8.2-cli":      {output: "install ok installed|8.2.12"},
-		"dpkg-query -W -f=${Status}|${Version} php8.2-fpm":      {output: "install ok installed|8.2.12"},
-		"dpkg-query -W -f=${Status}|${Version} php8.2-curl":     {output: "install ok installed|8.2.12"},
-		"dpkg-query -W -f=${Status}|${Version} php8.2-mbstring": {output: "install ok installed|8.2.12"},
-		"dpkg-query -W -f=${Status}|${Version} php8.2-xml":      {output: "install ok installed|8.2.12"},
-		"dpkg-query -W -f=${Status}|${Version} php8.2-zip":      {output: "install ok installed|8.2.12"},
-		"dpkg-query -W -f=${Status}|${Version} php8.2-sqlite3":  {output: "install ok installed|8.2.12"},
+		"dpkg-query -W -f=${Status}|${Version} php8.2":          {output: installedStatus},
+		"dpkg-query -W -f=${Status}|${Version} php8.2-cli":      {output: installedStatus},
+		"dpkg-query -W -f=${Status}|${Version} php8.2-fpm":      {output: installedStatus},
+		"dpkg-query -W -f=${Status}|${Version} php8.2-curl":     {output: installedStatus},
+		"dpkg-query -W -f=${Status}|${Version} php8.2-mbstring": {output: installedStatus},
+		"dpkg-query -W -f=${Status}|${Version} php8.2-xml":      {output: installedStatus},
+		"dpkg-query -W -f=${Status}|${Version} php8.2-zip":      {output: installedStatus},
+		"dpkg-query -W -f=${Status}|${Version} php8.2-sqlite3":  {output: installedStatus},
 	}}
 	manager := NewManager(Config{Runner: runner, Clock: func() time.Time { return now }})
 
@@ -49,8 +52,9 @@ func TestAcquireInstallsSupportedBundleAndVerifiesIt(t *testing.T) {
 func TestVerifyReturnsPackageDetailsWhenBundleIsIncomplete(t *testing.T) {
 	t.Parallel()
 
+	missingStatus := strings.TrimSpace(string(loadPackageFixture(t, "caddy_missing.status")))
 	runner := &packageRunner{results: map[string]packageRunResult{
-		"dpkg-query -W -f=${Status}|${Version} caddy": {output: "deinstall ok config-files|2.7.6", err: errors.New("not installed")},
+		"dpkg-query -W -f=${Status}|${Version} caddy": {output: missingStatus, err: errors.New("not installed")},
 	}}
 	manager := NewManager(Config{Runner: runner})
 
@@ -61,9 +65,18 @@ func TestVerifyReturnsPackageDetailsWhenBundleIsIncomplete(t *testing.T) {
 	if verification.Verified {
 		t.Fatal("expected verification to fail")
 	}
-	if got := verification.Details["caddy"]; got != "deinstall ok config-files|2.7.6" {
+	if got := verification.Details["caddy"]; got != missingStatus {
 		t.Fatalf("unexpected package detail: %q", got)
 	}
+}
+
+func loadPackageFixture(t *testing.T, name string) []byte {
+	t.Helper()
+	payload, err := os.ReadFile(filepath.Join("testdata", name))
+	if err != nil {
+		t.Fatalf("read package fixture %s: %v", name, err)
+	}
+	return payload
 }
 
 type packageRunResult struct {

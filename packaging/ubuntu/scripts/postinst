@@ -1,0 +1,102 @@
+#!/bin/sh
+set -eu
+
+PACKAGE_NAME="lara-nux"
+SERVICE_NAME="lara-nuxd.service"
+GROUP_NAME="lara-nux"
+USER_NAME="lara-nuxd"
+CONFIG_DIR="/etc/lara-nux"
+STATE_DIR="/var/lib/lara-nux"
+RUNTIME_DIR="/run/lara-nux"
+SOCKET_PATH="${RUNTIME_DIR}/lara-nux.sock"
+
+ensure_group() {
+	if ! getent group "$GROUP_NAME" >/dev/null 2>&1; then
+		addgroup --system "$GROUP_NAME"
+	fi
+}
+
+ensure_user() {
+	if ! id -u "$USER_NAME" >/dev/null 2>&1; then
+		adduser \
+			--system \
+			--quiet \
+			--ingroup "$GROUP_NAME" \
+			--home "$STATE_DIR" \
+			--no-create-home \
+			--shell /usr/sbin/nologin \
+			"$USER_NAME"
+	fi
+}
+
+ensure_dir() {
+	path="$1"
+	mode="$2"
+	install -d -o root -g "$GROUP_NAME" -m "$mode" "$path"
+}
+
+have_systemd_runtime() {
+	command -v systemctl >/dev/null 2>&1 && [ -d /run/systemd/system ]
+}
+
+fix_socket_permissions() {
+	if [ -S "$SOCKET_PATH" ]; then
+		chown root:"$GROUP_NAME" "$SOCKET_PATH"
+		chmod 0660 "$SOCKET_PATH"
+	fi
+}
+
+enable_unit() {
+	if command -v systemctl >/dev/null 2>&1; then
+		systemctl daemon-reload || true
+		systemctl enable "$SERVICE_NAME" >/dev/null 2>&1 || true
+	fi
+}
+
+start_or_restart_unit() {
+	previous_version="${1:-}"
+
+	if ! have_systemd_runtime; then
+		return 0
+	fi
+
+	if [ -n "$previous_version" ]; then
+		systemctl try-restart "$SERVICE_NAME"
+	else
+		systemctl start "$SERVICE_NAME"
+	fi
+}
+
+rollback_recovery() {
+	if have_systemd_runtime; then
+		systemctl daemon-reload || true
+		systemctl start "$SERVICE_NAME" || true
+	fi
+	fix_socket_permissions
+}
+
+case "${1:-}" in
+	configure)
+		ensure_group
+		ensure_user
+		ensure_dir "$CONFIG_DIR" 0750
+		ensure_dir "$STATE_DIR" 0750
+		ensure_dir "$RUNTIME_DIR" 0770
+		enable_unit
+		start_or_restart_unit "${2:-}"
+		fix_socket_permissions
+		;;
+	abort-upgrade|abort-remove|abort-deconfigure)
+		ensure_group
+		ensure_user
+		ensure_dir "$CONFIG_DIR" 0750
+		ensure_dir "$STATE_DIR" 0750
+		ensure_dir "$RUNTIME_DIR" 0770
+		rollback_recovery
+		;;
+	triggered)
+		fix_socket_permissions
+		;;
+	esac
+
+exit 0

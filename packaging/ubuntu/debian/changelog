@@ -1,0 +1,6 @@
+lara-nux (0.1.0~beta1-1) unstable; urgency=medium
+
+  * Add Ubuntu packaging metadata, maintainer scripts, managed file manifests,
+    and apt repository metadata for the first signed .deb path.
+
+ -- Lara Nux Maintainers <opensource@users.noreply.github.com>  Sat, 18 Apr 2026 00:00:00 +0000

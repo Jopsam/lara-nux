@@ -1,0 +1,19 @@
+Origin: Lara Nux
+Label: Lara Nux
+Suite: stable
+Codename: jammy
+Version: 0.1
+Architectures: amd64 arm64 source
+Components: main
+Description: Signed Ubuntu packages for Lara Nux
+SignWith: CHANGE_ME
+
+Origin: Lara Nux
+Label: Lara Nux
+Suite: stable
+Codename: noble
+Version: 0.1
+Architectures: amd64 arm64 source
+Components: main
+Description: Signed Ubuntu packages for Lara Nux
+SignWith: CHANGE_ME

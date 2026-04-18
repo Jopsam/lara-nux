@@ -1,0 +1,37 @@
+#!/bin/sh
+set -eu
+
+SERVICE_NAME="lara-nuxd.service"
+
+have_systemd_runtime() {
+	command -v systemctl >/dev/null 2>&1 && [ -d /run/systemd/system ]
+}
+
+stop_unit() {
+	if have_systemd_runtime; then
+		systemctl stop "$SERVICE_NAME" || true
+	fi
+}
+
+disable_unit() {
+	if command -v systemctl >/dev/null 2>&1; then
+		systemctl disable "$SERVICE_NAME" >/dev/null 2>&1 || true
+	fi
+}
+
+case "${1:-}" in
+	remove|deconfigure)
+		stop_unit
+		disable_unit
+		;;
+	upgrade)
+		stop_unit
+		;;
+	failed-upgrade)
+		if have_systemd_runtime; then
+			systemctl start "$SERVICE_NAME" || true
+		fi
+		;;
+	esac
+
+exit 0

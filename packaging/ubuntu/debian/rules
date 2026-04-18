@@ -1,0 +1,21 @@
+#!/usr/bin/make -f
+
+export DH_VERBOSE=1
+export DEB_BUILD_MAINT_OPTIONS=hardening=+all
+
+%:
+	dh $@
+
+override_dh_auto_build:
+	@printf '%s\n' 'Lara Nux Debian packaging consumes prebuilt staged artifacts; skipping source build.'
+
+override_dh_auto_install:
+	test -x "$(CURDIR)/packaging/ubuntu/stage/usr/bin/lara-nuxd"
+	test -d "$(CURDIR)/packaging/ubuntu/stage/usr/lib/lara-nux/client"
+	dh_auto_install
+
+override_dh_installdeb:
+	install -m 0755 "$(CURDIR)/packaging/ubuntu/scripts/postinst" "$(CURDIR)/debian/lara-nux.postinst"
+	install -m 0755 "$(CURDIR)/packaging/ubuntu/scripts/prerm" "$(CURDIR)/debian/lara-nux.prerm"
+	install -m 0755 "$(CURDIR)/packaging/ubuntu/scripts/postrm" "$(CURDIR)/debian/lara-nux.postrm"
+	dh_installdeb

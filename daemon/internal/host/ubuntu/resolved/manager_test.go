@@ -24,11 +24,11 @@ func TestEnsureTestStubRejectsResolverConflictsWithoutMutatingManagedStub(t *tes
 	}
 
 	mainConfig := filepath.Join(dir, "resolved.conf")
-	if err := os.WriteFile(mainConfig, []byte("[Resolve]\nDNS=1.1.1.1\n"), 0o644); err != nil {
+	if err := os.WriteFile(mainConfig, loadResolvedFixture(t, "main_resolved.conf"), 0o644); err != nil {
 		t.Fatalf("write main config: %v", err)
 	}
 	conflictPath := filepath.Join(dropInDir, "external.conf")
-	if err := os.WriteFile(conflictPath, []byte("[Resolve]\nDomains=~test\n"), 0o644); err != nil {
+	if err := os.WriteFile(conflictPath, loadResolvedFixture(t, "external_test_domain.conf"), 0o644); err != nil {
 		t.Fatalf("write conflict config: %v", err)
 	}
 
@@ -47,4 +47,13 @@ func TestEnsureTestStubRejectsResolverConflictsWithoutMutatingManagedStub(t *tes
 	if _, statErr := os.Stat(stubPath); !errors.Is(statErr, os.ErrNotExist) {
 		t.Fatalf("expected managed stub to remain absent, stat err=%v", statErr)
 	}
+}
+
+func loadResolvedFixture(t *testing.T, name string) []byte {
+	t.Helper()
+	payload, err := os.ReadFile(filepath.Join("testdata", name))
+	if err != nil {
+		t.Fatalf("read resolved fixture %s: %v", name, err)
+	}
+	return payload
 }

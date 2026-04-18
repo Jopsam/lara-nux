@@ -114,12 +114,12 @@ func DefaultUbuntuManagedAssets(paths AppPaths) ManagedAssetManifest {
 			{
 				ID:             "daemon-service",
 				Kind:           ManagedAssetServiceUnit,
-				Path:           "/etc/systemd/system/lara-nuxd.service",
+				Path:           "/lib/systemd/system/lara-nuxd.service",
 				Owner:          "root",
 				Group:          "root",
 				Mode:           "0644",
 				RollbackAction: RollbackRemove,
-				Notes:          "Privileged systemd unit for the system daemon.",
+				Notes:          "Packaged systemd unit for the privileged daemon; local overrides belong under /etc/systemd/system.",
 			},
 		},
 	}

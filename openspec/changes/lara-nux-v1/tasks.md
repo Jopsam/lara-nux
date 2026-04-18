@@ -28,15 +28,15 @@
 
 ## Phase 5: Packaging / Install / Uninstall
 
-- [ ] 5.1 Add `packaging/ubuntu/systemd/*.service`, daemon user/group setup, and socket permissions matching `root:lara-nux`.
-- [ ] 5.2 Add `packaging/ubuntu/scripts/{postinst,prerm,postrm}` for first install, idempotent upgrade, rollback, and safe uninstall that preserves user projects.
-- [ ] 5.3 Add `packaging/ubuntu/debian/*` and repo metadata for a signed `.deb` build path and managed file manifests.
+- [x] 5.1 Add `packaging/ubuntu/systemd/*.service`, daemon user/group setup, and socket permissions matching `root:lara-nux`.
+- [x] 5.2 Add `packaging/ubuntu/scripts/{postinst,prerm,postrm}` for first install, idempotent upgrade, rollback, and safe uninstall that preserves user projects.
+- [x] 5.3 Add `packaging/ubuntu/debian/*` and repo metadata for a signed `.deb` build path and managed file manifests.
 
 ## Phase 6: Testing
 
-- [ ] 6.1 Add unit tests in `daemon/internal/app/*_test.*` for Laravel validation, duplicate-domain rejection, supported-runtime rules, and health/conflict mapping.
-- [ ] 6.2 Add adapter integration fixtures in `daemon/internal/host/ubuntu/*/testdata/` plus tests for resolver conflicts, Caddy render/reload, PHP-FPM switching, and package verification.
-- [ ] 6.3 Add end-to-end coverage in `testing/e2e/ubuntu/*` for install -> register site -> browse HTTPS -> switch PHP -> uninstall on Ubuntu 22.04 and 24.04.
+- [x] 6.1 Add unit tests in `daemon/internal/app/*_test.*` for Laravel validation, duplicate-domain rejection, supported-runtime rules, and health/conflict mapping.
+- [x] 6.2 Add adapter integration fixtures in `daemon/internal/host/ubuntu/*/testdata/` plus tests for resolver conflicts, Caddy render/reload, PHP-FPM switching, and package verification.
+- [x] 6.3 Add end-to-end coverage in `testing/e2e/ubuntu/*` for install -> register site -> browse HTTPS -> switch PHP -> uninstall on Ubuntu 22.04 and 24.04.
 
 ## Phase 7: OSS / Release Hardening
 

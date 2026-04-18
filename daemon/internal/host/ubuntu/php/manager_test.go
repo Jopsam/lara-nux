@@ -76,10 +76,10 @@ func TestMaterializeRuntimeRestoresBackupsWhenValidationFails(t *testing.T) {
 	if err := os.MkdirAll(filepath.Dir(overridePath), 0o755); err != nil {
 		t.Fatalf("mkdir override dir: %v", err)
 	}
-	if err := os.WriteFile(poolPath, []byte("old-pool\n"), 0o644); err != nil {
+	if err := os.WriteFile(poolPath, loadGoldenBytes(t, filepath.Join("testdata", "previous_pool.conf")), 0o644); err != nil {
 		t.Fatalf("write old pool config: %v", err)
 	}
-	if err := os.WriteFile(overridePath, []byte("old-override\n"), 0o644); err != nil {
+	if err := os.WriteFile(overridePath, loadGoldenBytes(t, filepath.Join("testdata", "previous_override.conf")), 0o644); err != nil {
 		t.Fatalf("write old override config: %v", err)
 	}
 
@@ -101,10 +101,10 @@ func TestMaterializeRuntimeRestoresBackupsWhenValidationFails(t *testing.T) {
 	if readErr != nil {
 		t.Fatalf("read restored override config: %v", readErr)
 	}
-	if string(restoredPool) != "old-pool\n" {
+	if string(restoredPool) != string(loadGoldenBytes(t, filepath.Join("testdata", "previous_pool.conf"))) {
 		t.Fatalf("expected pool config rollback, got %q", string(restoredPool))
 	}
-	if string(restoredOverride) != "old-override\n" {
+	if string(restoredOverride) != string(loadGoldenBytes(t, filepath.Join("testdata", "previous_override.conf"))) {
 		t.Fatalf("expected override rollback, got %q", string(restoredOverride))
 	}
 
@@ -112,6 +112,39 @@ func TestMaterializeRuntimeRestoresBackupsWhenValidationFails(t *testing.T) {
 		"systemctl daemon-reload",
 		"/usr/sbin/php-fpm8.2 -t",
 		"systemctl daemon-reload",
+		"systemctl restart php8.2-fpm",
+	}
+	if fmt.Sprint(runner.calls) != fmt.Sprint(expectedCalls) {
+		t.Fatalf("unexpected runner calls: %v", runner.calls)
+	}
+}
+
+func TestSwitchRuntimeRestartsPreviousServiceWhenTargetFails(t *testing.T) {
+	t.Parallel()
+
+	dir := t.TempDir()
+	runner := &phpRunner{results: map[string]phpRunResult{
+		"/usr/sbin/php-fpm8.3 -t": {output: "broken config", err: errors.New("exit status 78")},
+	}}
+	manager := NewManager(Config{PHPRootDir: filepath.Join(dir, "php"), SystemdDir: filepath.Join(dir, "systemd"), SocketDir: filepath.Join(dir, "run", "php"), Runner: runner})
+
+	_, err := manager.SwitchRuntime(context.Background(), host.PHPSwitchRequest{
+		SiteID: "site-1",
+		Previous: host.PHPRuntime{
+			Version:     "8.2",
+			ServiceName: "php8.2-fpm",
+		},
+		Target: host.PHPRuntime{Version: "8.3"},
+	})
+	if !errors.Is(err, host.ErrRuntimeSwitchRollback) {
+		t.Fatalf("expected ErrRuntimeSwitchRollback, got %v", err)
+	}
+
+	expectedCalls := []string{
+		"systemctl daemon-reload",
+		"/usr/sbin/php-fpm8.3 -t",
+		"systemctl daemon-reload",
+		"systemctl restart php8.3-fpm",
 		"systemctl restart php8.2-fpm",
 	}
 	if fmt.Sprint(runner.calls) != fmt.Sprint(expectedCalls) {
@@ -140,9 +173,14 @@ func (r *phpRunner) Run(_ context.Context, name string, args ...string) (string,
 
 func loadGoldenText(t *testing.T, path string) string {
 	t.Helper()
+	return string(loadGoldenBytes(t, path))
+}
+
+func loadGoldenBytes(t *testing.T, path string) []byte {
+	t.Helper()
 	payload, err := os.ReadFile(path)
 	if err != nil {
 		t.Fatalf("read golden file %s: %v", path, err)
 	}
-	return string(payload)
+	return payload
 }

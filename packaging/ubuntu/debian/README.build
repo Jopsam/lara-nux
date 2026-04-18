@@ -1,0 +1,20 @@
+# Debian build notes for Lara Nux
+
+This directory is the Debian metadata source for the Ubuntu package, but the
+repository intentionally keeps it under `packaging/ubuntu/` instead of polluting
+ the repo root.
+
+## Expected build flow
+
+1. Build or collect the release artifacts outside of Debian helpers.
+2. Stage them under:
+   - `packaging/ubuntu/stage/usr/bin/lara-nuxd`
+   - `packaging/ubuntu/stage/usr/lib/lara-nux/client/`
+3. Expose this directory as the active `debian/` directory in the build root
+   (symlink or copy it at repo root in CI).
+4. Run `dpkg-buildpackage -us -uc`.
+5. Sign the resulting `.changes` / `.dsc` and publish the `.deb` into the apt
+   repository described under `packaging/ubuntu/repo/`.
+
+The maintainer scripts are sourced from `packaging/ubuntu/scripts/` during
+`dh_installdeb`, so packaging logic stays centralized and idempotent.

@@ -1,0 +1,7 @@
+{
+  "name": "ubuntu-22.04",
+  "codename": "jammy",
+  "defaultPHP": "8.2",
+  "switchPHP": "8.3",
+  "domain": "jammy-demo.test"
+}

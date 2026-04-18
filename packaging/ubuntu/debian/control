@@ -1,0 +1,16 @@
+Source: lara-nux
+Section: devel
+Priority: optional
+Maintainer: Lara Nux Maintainers <opensource@users.noreply.github.com>
+Build-Depends: debhelper-compat (= 13)
+Standards-Version: 4.7.0
+Rules-Requires-Root: no
+Homepage: https://github.com/jopsam/lara-nux
+
+Package: lara-nux
+Architecture: any
+Depends: ${misc:Depends}, ${shlibs:Depends}, adduser, caddy, systemd
+Description: Ubuntu-first local Laravel environment for developers
+ Lara Nux ships a privileged Ubuntu daemon plus desktop assets for local
+ Laravel development with managed DNS, HTTPS, PHP runtime switching, and
+ service orchestration.

@@ -1,0 +1,114 @@
+#!/bin/sh
+set -eu
+
+SERVICE_NAME="lara-nuxd.service"
+GROUP_NAME="lara-nux"
+USER_NAME="lara-nuxd"
+MANAGED_MARKER="# Managed by Lara Nux"
+CONFIG_DIR="/etc/lara-nux"
+STATE_DIR="/var/lib/lara-nux"
+RUNTIME_DIR="/run/lara-nux"
+SOCKET_PATH="${RUNTIME_DIR}/lara-nux.sock"
+RESOLVED_STUB="/etc/systemd/resolved.conf.d/lara-nux-test.conf"
+CADDY_DIR="/etc/caddy/sites.d/lara-nux"
+
+have_systemd_runtime() {
+	command -v systemctl >/dev/null 2>&1 && [ -d /run/systemd/system ]
+}
+
+systemctl_if_available() {
+	if command -v systemctl >/dev/null 2>&1; then
+		systemctl "$@" >/dev/null 2>&1 || true
+	fi
+}
+
+remove_if_managed() {
+	path="$1"
+	if [ ! -f "$path" ]; then
+		return 0
+	fi
+
+	if grep -Fq "$MANAGED_MARKER" "$path" 2>/dev/null; then
+		rm -f "$path"
+	fi
+}
+
+remove_glob_if_managed() {
+	pattern="$1"
+	matched=false
+	for path in $pattern; do
+		if [ "$path" = "$pattern" ] && [ ! -e "$path" ]; then
+			continue
+		fi
+		matched=true
+		remove_if_managed "$path"
+		dirname "$path" >/dev/null 2>&1 || true
+		rmdir "$(dirname "$path")" >/dev/null 2>&1 || true
+	done
+
+	if [ "$matched" = false ]; then
+		return 0
+	fi
+}
+
+cleanup_runtime_assets() {
+	rm -f "$SOCKET_PATH"
+	rmdir "$RUNTIME_DIR" >/dev/null 2>&1 || true
+}
+
+cleanup_managed_host_assets() {
+	remove_if_managed "$RESOLVED_STUB"
+	remove_glob_if_managed "${CADDY_DIR}/*.caddy"
+	rmdir "$CADDY_DIR" >/dev/null 2>&1 || true
+	remove_glob_if_managed "/etc/php/*/fpm/pool.d/lara-nux.conf"
+	remove_glob_if_managed "/etc/systemd/system/php*-fpm.d/lara-nux.conf"
+	remove_glob_if_managed "/etc/systemd/system/php*-fpm.service.d/lara-nux.conf"
+	systemctl_if_available daemon-reload
+	if have_systemd_runtime; then
+		systemctl reload-or-restart systemd-resolved >/dev/null 2>&1 || true
+		systemctl reload-or-restart caddy >/dev/null 2>&1 || true
+		systemctl reset-failed "$SERVICE_NAME" >/dev/null 2>&1 || true
+	fi
+}
+
+purge_packaging_state() {
+	rm -f "${STATE_DIR}/managed-assets.json"
+	rmdir "$STATE_DIR" >/dev/null 2>&1 || true
+	rmdir "$CONFIG_DIR" >/dev/null 2>&1 || true
+	if id -u "$USER_NAME" >/dev/null 2>&1; then
+		deluser --system --quiet "$USER_NAME" >/dev/null 2>&1 || true
+	fi
+	if getent group "$GROUP_NAME" >/dev/null 2>&1; then
+		members="$(getent group "$GROUP_NAME" | awk -F: '{print $4}')"
+		if [ -z "$members" ]; then
+			delgroup --system "$GROUP_NAME" >/dev/null 2>&1 || true
+		fi
+	fi
+}
+
+restore_after_abort() {
+	if have_systemd_runtime; then
+		systemctl start "$SERVICE_NAME" >/dev/null 2>&1 || true
+	fi
+}
+
+case "${1:-}" in
+	remove)
+		cleanup_runtime_assets
+		cleanup_managed_host_assets
+		;;
+	purge)
+		cleanup_runtime_assets
+		cleanup_managed_host_assets
+		purge_packaging_state
+		;;
+	abort-install|abort-upgrade)
+		cleanup_runtime_assets
+		cleanup_managed_host_assets
+		;;
+	abort-remove|abort-deconfigure)
+		restore_after_abort
+		;;
+	esac
+
+exit 0

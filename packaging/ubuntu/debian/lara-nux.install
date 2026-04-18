@@ -1,0 +1,6 @@
+packaging/ubuntu/stage/usr/bin/lara-nuxd usr/bin/
+packaging/ubuntu/stage/usr/lib/lara-nux/client/* usr/lib/lara-nux/client/
+packaging/ubuntu/systemd/lara-nuxd.service lib/systemd/system/
+packaging/ubuntu/debian/lara-nux.managed-files usr/share/lara-nux/packaging/
+packaging/ubuntu/repo/apt-ftparchive.conf usr/share/lara-nux/packaging/repo/
+packaging/ubuntu/repo/distributions usr/share/lara-nux/packaging/repo/

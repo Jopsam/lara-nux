@@ -1,0 +1,30 @@
+[Unit]
+Description=Lara Nux privileged daemon
+Documentation=https://github.com/jopsam/lara-nux
+After=network-online.target systemd-resolved.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=root
+Group=root
+UMask=0007
+Environment=LARA_NUXT_CONFIG_DIR=/etc/lara-nux
+Environment=LARA_NUXT_STATE_DIR=/var/lib/lara-nux
+Environment=LARA_NUXT_RUNTIME_DIR=/run/lara-nux
+Environment=LARA_NUXT_SOCKET_PATH=/run/lara-nux/lara-nux.sock
+Environment=LARA_NUXT_MANAGED_ASSETS_PATH=/var/lib/lara-nux/managed-assets.json
+ExecStartPre=/usr/bin/install -d -o root -g lara-nux -m 0750 /etc/lara-nux
+ExecStartPre=/usr/bin/install -d -o root -g lara-nux -m 0750 /var/lib/lara-nux
+ExecStartPre=/usr/bin/install -d -o root -g lara-nux -m 0770 /run/lara-nux
+ExecStart=/usr/bin/lara-nuxd
+ExecStartPost=/bin/sh -eu -c 'if [ -S /run/lara-nux/lara-nux.sock ]; then chown root:lara-nux /run/lara-nux/lara-nux.sock && chmod 0660 /run/lara-nux/lara-nux.sock; fi'
+ExecStopPost=/bin/sh -eu -c 'rm -f /run/lara-nux/lara-nux.sock'
+Restart=on-failure
+RestartSec=2s
+TimeoutStartSec=30s
+TimeoutStopSec=15s
+NoNewPrivileges=false
+
+[Install]
+WantedBy=multi-user.target

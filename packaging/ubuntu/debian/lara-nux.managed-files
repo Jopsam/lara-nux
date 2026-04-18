@@ -1,0 +1,13 @@
+# kind|path|owner|group|mode|rollback_policy
+service-unit|/lib/systemd/system/lara-nuxd.service|root|root|0644|dpkg-managed
+config-dir|/etc/lara-nux|root|lara-nux|0750|preserve-until-purge
+state-dir|/var/lib/lara-nux|root|lara-nux|0750|preserve-until-purge
+runtime-dir|/run/lara-nux|root|lara-nux|0770|remove-on-uninstall
+socket|/run/lara-nux/lara-nux.sock|root|lara-nux|0660|remove-on-uninstall
+state-file|/var/lib/lara-nux/managed-assets.json|root|lara-nux|0640|preserve-until-purge
+resolver-stub|/etc/systemd/resolved.conf.d/lara-nux-test.conf|root|root|0644|remove-if-managed
+web-config-dir|/etc/caddy/sites.d/lara-nux|root|root|0755|remove-if-empty
+web-config|/etc/caddy/sites.d/lara-nux/*.caddy|root|root|0644|remove-if-managed
+php-pool|/etc/php/*/fpm/pool.d/lara-nux.conf|root|root|0644|remove-if-managed
+php-systemd-override|/etc/systemd/system/php*-fpm.d/lara-nux.conf|root|root|0644|remove-if-managed
+php-systemd-override|/etc/systemd/system/php*-fpm.service.d/lara-nux.conf|root|root|0644|remove-if-managed

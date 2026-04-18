@@ -82,7 +82,7 @@ func TestActivateSiteRestoresPreviousConfigOnValidationFailure(t *testing.T) {
 		t.Fatalf("mkdir sites dir: %v", err)
 	}
 	configPath := filepath.Join(sitesDir, "demo-site.caddy")
-	previous := []byte("# previous config\n")
+	previous := loadGoldenBytes(t, filepath.Join("testdata", "existing_site.caddy"))
 	if err := os.WriteFile(configPath, previous, 0o644); err != nil {
 		t.Fatalf("write existing config: %v", err)
 	}
@@ -114,6 +114,57 @@ func TestActivateSiteRestoresPreviousConfigOnValidationFailure(t *testing.T) {
 	}
 }
 
+func TestActivateSiteRestoresPreviousConfigOnReloadFailure(t *testing.T) {
+	t.Parallel()
+
+	dir := t.TempDir()
+	project := filepath.Join(dir, "demo")
+	publicDir := filepath.Join(project, "public")
+	if err := os.MkdirAll(publicDir, 0o755); err != nil {
+		t.Fatalf("mkdir public dir: %v", err)
+	}
+
+	sitesDir := filepath.Join(dir, "sites")
+	if err := os.MkdirAll(sitesDir, 0o755); err != nil {
+		t.Fatalf("mkdir sites dir: %v", err)
+	}
+	configPath := filepath.Join(sitesDir, "demo-site.caddy")
+	previous := loadGoldenBytes(t, filepath.Join("testdata", "existing_site.caddy"))
+	if err := os.WriteFile(configPath, previous, 0o644); err != nil {
+		t.Fatalf("write existing config: %v", err)
+	}
+
+	validateCall := "caddy validate --config " + filepath.Join(dir, "Caddyfile") + " --adapter caddyfile"
+	reloadCall := "systemctl reload caddy"
+	runner := &caddyRunner{results: map[string]caddyRunResult{
+		reloadCall: {output: "reload failed", err: errors.New("exit status 1")},
+	}}
+	manager := NewManager(Config{SitesDir: sitesDir, RootConfigPath: filepath.Join(dir, "Caddyfile"), Runner: runner})
+
+	_, err := manager.ActivateSite(context.Background(), host.WebSite{
+		ID:            "demo-site",
+		Domain:        "demo.test",
+		RootPath:      project,
+		PHPSocketPath: "/run/php/lara-nux-php8.2-fpm.sock",
+	})
+	if err == nil || !strings.Contains(err.Error(), "reload caddy after activating") {
+		t.Fatalf("expected reload failure, got %v", err)
+	}
+
+	restored, readErr := os.ReadFile(configPath)
+	if readErr != nil {
+		t.Fatalf("read restored config: %v", readErr)
+	}
+	if string(restored) != string(previous) {
+		t.Fatalf("expected previous config to be restored, got %q", string(restored))
+	}
+
+	expectedCalls := []string{validateCall, reloadCall, validateCall, reloadCall}
+	if fmt.Sprint(runner.calls) != fmt.Sprint(expectedCalls) {
+		t.Fatalf("unexpected runner calls: %v", runner.calls)
+	}
+}
+
 type caddyRunResult struct {
 	output string
 	err    error
@@ -135,9 +186,14 @@ func (r *caddyRunner) Run(_ context.Context, name string, args ...string) (strin
 
 func loadGoldenText(t *testing.T, path string) string {
 	t.Helper()
+	return string(loadGoldenBytes(t, path))
+}
+
+func loadGoldenBytes(t *testing.T, path string) []byte {
+	t.Helper()
 	payload, err := os.ReadFile(path)
 	if err != nil {
 		t.Fatalf("read golden file %s: %v", path, err)
 	}
-	return string(payload)
+	return payload
 }

@@ -8,6 +8,35 @@ import (
 	"testing"
 )
 
+func TestPHPRegistryRejectsUnsupportedRuntime(t *testing.T) {
+	t.Parallel()
+
+	dir := t.TempDir()
+	binaryPath := filepath.Join(dir, "php80")
+	writeExecutable(t, binaryPath)
+
+	registry := NewPHPRegistry(filepath.Join(dir, "state.json"))
+	registry.run = func(context.Context, string, ...string) (string, error) {
+		return "8.0", nil
+	}
+
+	_, err := registry.Register(context.Background(), RuntimeRegistrationInput{
+		Version:    "8.0",
+		BinaryPath: binaryPath,
+	})
+	if !errors.Is(err, ErrUnsupportedRuntime) {
+		t.Fatalf("expected ErrUnsupportedRuntime, got %v", err)
+	}
+
+	runtimes, listErr := registry.List(context.Background())
+	if listErr != nil {
+		t.Fatalf("List returned error: %v", listErr)
+	}
+	if len(runtimes) != 0 {
+		t.Fatalf("expected no persisted runtimes after unsupported registration, got %d", len(runtimes))
+	}
+}
+
 func TestPHPRegistryRejectsVersionMismatch(t *testing.T) {
 	t.Parallel()
 

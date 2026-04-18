@@ -1,0 +1,7 @@
+{
+  "name": "ubuntu-24.04",
+  "codename": "noble",
+  "defaultPHP": "8.3",
+  "switchPHP": "8.4",
+  "domain": "noble-demo.test"
+}
