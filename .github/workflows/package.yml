@@ -1,0 +1,92 @@
+name: Package
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: package-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate-deb:
+    name: Validate Debian package wiring
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install packaging tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential debhelper dpkg-dev fakeroot lintian
+
+      - name: Verify maintainer scripts parse
+        run: |
+          sh -n packaging/ubuntu/scripts/postinst
+          sh -n packaging/ubuntu/scripts/prerm
+          sh -n packaging/ubuntu/scripts/postrm
+
+      - name: Stage placeholder release assets for packaging validation
+        run: |
+          mkdir -p packaging/ubuntu/stage/usr/bin
+          mkdir -p packaging/ubuntu/stage/usr/lib/lara-nux/client
+
+          cat > packaging/ubuntu/stage/usr/bin/lara-nuxd <<'EOF'
+          #!/bin/sh
+          exit 0
+          EOF
+          chmod 0755 packaging/ubuntu/stage/usr/bin/lara-nuxd
+
+          cat > packaging/ubuntu/stage/usr/lib/lara-nux/client/index.html <<'EOF'
+          <!doctype html>
+          <html lang="en"><head><meta charset="utf-8"><title>Lara Nux placeholder UI</title></head><body>placeholder client artifact for package validation</body></html>
+          EOF
+
+      - name: Build validation .deb
+        run: |
+          chmod 0755 packaging/ubuntu/debian/rules
+          ln -sfn packaging/ubuntu/debian debian
+          dpkg-buildpackage -us -uc -b
+
+      - name: Inspect generated package
+        run: |
+          shopt -s nullglob
+          packages=(../lara-nux_*.deb)
+          changes=(../lara-nux_*.changes)
+          buildinfo=(../lara-nux_*.buildinfo)
+
+          if [ ${#packages[@]} -eq 0 ]; then
+            echo "::error::No .deb package was produced."
+            exit 1
+          fi
+
+          dpkg-deb --info "${packages[0]}"
+          dpkg-deb --contents "${packages[0]}"
+
+          mkdir -p artifacts/package-validation
+          cp -v "${packages[@]}" artifacts/package-validation/
+          if [ ${#changes[@]} -gt 0 ]; then cp -v "${changes[@]}" artifacts/package-validation/; fi
+          if [ ${#buildinfo[@]} -gt 0 ]; then cp -v "${buildinfo[@]}" artifacts/package-validation/; fi
+
+      - name: Run lintian
+        run: |
+          shopt -s nullglob
+          artifacts=(artifacts/package-validation/*)
+          if [ ${#artifacts[@]} -eq 0 ]; then
+            echo "::error::No package artifacts available for lintian."
+            exit 1
+          fi
+          lintian --fail-on error "${artifacts[@]}"
+
+      - name: Upload package validation artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ubuntu-package-validation
+          path: artifacts/package-validation/*
+          if-no-files-found: error

@@ -1,0 +1,109 @@
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      package_run_id:
+        description: Successful Package workflow run ID to download validation artifacts from
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  signing-readiness:
+    name: Signing readiness checks
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Fail on placeholder signing metadata
+        run: |
+          if grep -q 'SignWith: CHANGE_ME' packaging/ubuntu/repo/distributions; then
+            echo "::error::packaging/ubuntu/repo/distributions still contains 'SignWith: CHANGE_ME'. Replace it with the real release key identifier before running release checks."
+            exit 1
+          fi
+
+      - name: Fail if release GPG secrets are missing
+        env:
+          PRIVATE_KEY: ${{ secrets.LARA_NUX_RELEASE_GPG_PRIVATE_KEY }}
+          PASSPHRASE: ${{ secrets.LARA_NUX_RELEASE_GPG_PASSPHRASE }}
+        run: |
+          missing=0
+          if [ -z "$PRIVATE_KEY" ]; then
+            echo "::error::Missing LARA_NUX_RELEASE_GPG_PRIVATE_KEY secret."
+            missing=1
+          fi
+          if [ -z "$PASSPHRASE" ]; then
+            echo "::error::Missing LARA_NUX_RELEASE_GPG_PASSPHRASE secret."
+            missing=1
+          fi
+          if [ "$missing" -ne 0 ]; then
+            exit 1
+          fi
+
+  signing-checks:
+    name: Artifact signing checks
+    needs: signing-readiness
+    runs-on: ubuntu-latest
+    env:
+      GNUPGHOME: ${{ runner.temp }}/gnupg
+    steps:
+      - name: Download package validation artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: ubuntu-package-validation
+          run-id: ${{ inputs.package_run_id }}
+          github-token: ${{ github.token }}
+          path: artifacts/package-validation
+
+      - name: Ensure package artifacts exist
+        run: |
+          shopt -s nullglob
+          files=(artifacts/package-validation/*.deb artifacts/package-validation/*.changes artifacts/package-validation/*.buildinfo)
+          if [ ${#files[@]} -eq 0 ]; then
+            echo "::error::No package artifacts were downloaded. Run the Package workflow first and pass that run ID here."
+            exit 1
+          fi
+
+      - name: Install GnuPG
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gnupg
+
+      - name: Import release key
+        env:
+          PRIVATE_KEY: ${{ secrets.LARA_NUX_RELEASE_GPG_PRIVATE_KEY }}
+        run: |
+          mkdir -p "$GNUPGHOME"
+          chmod 700 "$GNUPGHOME"
+          printf '%s' "$PRIVATE_KEY" | gpg --batch --import
+          gpg --batch --list-secret-keys
+
+      - name: Sign and verify package artifacts
+        env:
+          PASSPHRASE: ${{ secrets.LARA_NUX_RELEASE_GPG_PASSPHRASE }}
+        run: |
+          shopt -s nullglob
+          files=(artifacts/package-validation/*.deb artifacts/package-validation/*.changes artifacts/package-validation/*.buildinfo)
+          mkdir -p artifacts/signatures
+
+          for file in "${files[@]}"; do
+            output="artifacts/signatures/$(basename "$file").asc"
+            gpg --batch --yes --pinentry-mode loopback --passphrase "$PASSPHRASE" --armor --detach-sign --output "$output" "$file"
+            gpg --batch --verify "$output" "$file"
+          done
+
+          sha256sum "${files[@]}" > artifacts/signatures/SHA256SUMS
+          gpg --batch --yes --pinentry-mode loopback --passphrase "$PASSPHRASE" --armor --detach-sign --output artifacts/signatures/SHA256SUMS.asc artifacts/signatures/SHA256SUMS
+          gpg --batch --verify artifacts/signatures/SHA256SUMS.asc artifacts/signatures/SHA256SUMS
+
+      - name: Upload signing check artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ubuntu-signing-checks
+          path: artifacts/signatures/*
+          if-no-files-found: error

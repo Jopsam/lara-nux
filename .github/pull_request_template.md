@@ -21,6 +21,14 @@ Closes #
 
 <!-- Call out anything intentionally left out so review stays focused. -->
 
+## Reproduction / validation
+
+<!-- Be concrete. For Ubuntu bugs, include the distro/version and exact commands or checks you used. -->
+
+- Ubuntu version(s) checked:
+- Validation performed:
+- Packaging / release workflow impact:
+
 ## Checklist
 
 - [ ] Scope is focused and does not include unrelated changes
@@ -28,5 +36,6 @@ Closes #
 - [ ] A maintainer-applied or author-applied `type:*` label is present on the PR
 - [ ] Tests were added or updated when behavior changed
 - [ ] Documentation was updated when needed
+- [ ] For Ubuntu behavior changes, the reproduction or troubleshooting guidance stayed accurate
 - [ ] CHANGELOG.md was updated for user-facing changes
 - [ ] I verified the affected area before requesting review

@@ -1,1 +1,8 @@
 blank_issues_enabled: false
+contact_links:
+  - name: Ubuntu support and troubleshooting
+    url: https://github.com/jopsam/lara-nux/blob/main/docs/ubuntu.md
+    about: Read the supported Ubuntu matrix, privilege model, rollback notes, and bug-report checklist first.
+  - name: Security policy
+    url: https://github.com/jopsam/lara-nux/blob/main/SECURITY.md
+    about: Report vulnerabilities privately, not through public bug issues.

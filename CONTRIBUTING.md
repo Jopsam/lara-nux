@@ -32,6 +32,18 @@ Out of scope for now:
 3. Maintainers triage new issues with labels such as `status:*`, `priority:*`, `area:*`, and `effort:*`
 4. Wait for maintainer feedback before starting large implementation work
 
+### Reproducible Ubuntu bug reports
+
+If you are reporting install, DNS, Caddy, PHP-FPM, socket, or service issues, your report SHOULD include:
+
+- supported Ubuntu release (`jammy` or `noble`)
+- install source (`.deb`, apt repo, or source checkout)
+- exact reproduction steps from a clean starting point
+- exact expected vs actual behavior
+- exact diagnostic output for the affected service or socket
+
+Start with the checklist in [`docs/ubuntu.md`](./docs/ubuntu.md). If a bug only reproduces on an unsupported Ubuntu release, maintainers may close it until it reproduces on the supported matrix.
+
 ## Pull request process
 
 1. Create a branch with a clear name, for example: `fix/php-version-check`
@@ -42,6 +54,7 @@ Out of scope for now:
 6. Update docs when behavior changes
 7. Add or update tests when backend behavior changes
 8. Add a `CHANGELOG.md` entry for user-facing changes
+9. If the PR touches Ubuntu packaging, installation, rollback, or troubleshooting flows, update the bug-report/docs guardrails too
 
 ### Label taxonomy
 
@@ -66,6 +79,7 @@ Only `type:*` is required by automation on pull requests. The other namespaces a
 
 - New issues should get initial triage as time allows
 - PRs should explain the why, not only the what
+- PRs that change Ubuntu behavior should include concrete reproduction / validation notes
 - Vague issues or PRs may be redirected, narrowed, or closed
 
 ## Triage cadence
@@ -77,7 +91,16 @@ Only `type:*` is required by automation on pull requests. The other namespaces a
 ## Local validation
 
 - For daemon changes, run Go tests from the `daemon/` package before requesting review
+- For Ubuntu workflow scaffold changes, run Go tests from `testing/e2e/ubuntu/`
+- For packaging/workflow changes, keep validation scoped: package CI currently validates Debian wiring with **placeholder staged artifacts**, not shipping binaries
 - For docs-only or repo-infra-only changes, keep validation scoped to the files you touched
+
+Examples:
+
+```bash
+(cd daemon && go test ./...)
+(cd testing/e2e/ubuntu && go test ./...)
+```
 
 ## Security
 

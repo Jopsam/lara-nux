@@ -1,9 +1,15 @@
 ---
 name: Bug report
-about: Report something broken
+about: Report a reproducible Lara Nux problem on supported Ubuntu
 title: "[Bug]: "
 labels: ["type:bug", "status:needs-triage"]
 ---
+
+## Support check
+
+- [ ] I reproduced this on Ubuntu 22.04 LTS (Jammy) or 24.04 LTS (Noble)
+- [ ] I read `docs/ubuntu.md`
+- [ ] This is not a private security report (if it is, use `SECURITY.md` instead)
 
 ## Description
 
@@ -15,6 +21,12 @@ What is broken?
 2.
 3.
 
+## Reproduction frequency
+
+- [ ] Every time
+- [ ] Sometimes
+- [ ] Only happened once
+
 ## Expected behavior
 
 What should happen?
@@ -25,10 +37,24 @@ What happens instead?
 
 ## Environment
 
-- OS:
-- Ubuntu version:
+- Ubuntu version / codename:
+- Install source: local `.deb` / apt repo / source checkout / other
+- Lara Nux version or commit:
+- Desktop session / shell:
 - Relevant runtime/service details:
+
+## Diagnostics
+
+Paste the relevant output or say `not available`.
+
+- `id`:
+- `ls -l /run/lara-nux/lara-nux.sock`:
+- `systemctl status lara-nuxd --no-pager`:
+- `journalctl -u lara-nuxd -b --no-pager`:
+- `resolvectl status`:
+- `systemctl status caddy --no-pager`:
+- Active / expected PHP runtime:
 
 ## Logs or screenshots
 
-Add only the relevant evidence.
+Add only the relevant evidence. Redact secrets, but keep the real error text.

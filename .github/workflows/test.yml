@@ -1,0 +1,51 @@
+name: Test
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: test-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  daemon-go-tests:
+    name: Daemon Go tests
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: daemon
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: daemon/go.mod
+
+      - name: Run daemon tests
+        run: go test ./...
+
+  ubuntu-e2e-scaffold:
+    name: Ubuntu workflow scaffold tests
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: testing/e2e/ubuntu
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: testing/e2e/ubuntu/go.mod
+
+      - name: Run Ubuntu scaffold tests
+        run: go test ./...

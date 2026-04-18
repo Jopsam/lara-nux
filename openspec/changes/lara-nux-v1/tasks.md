@@ -40,6 +40,6 @@
 
 ## Phase 7: OSS / Release Hardening
 
-- [ ] 7.1 Document support matrix, privileges, rollback, and troubleshooting in `README.md` and `docs/ubuntu.md`.
-- [ ] 7.2 Add CI/release workflows in `.github/workflows/{test,package,release}.yml` for tests, `.deb` validation, and artifact signing checks.
-- [ ] 7.3 Add contributor/reporter guardrails in `.github/ISSUE_TEMPLATE/*`, `.github/pull_request_template.md`, and `CONTRIBUTING.md` for reproducible Ubuntu bug reports.
+- [x] 7.1 Document support matrix, privileges, rollback, and troubleshooting in `README.md` and `docs/ubuntu.md`.
+- [x] 7.2 Add CI/release workflows in `.github/workflows/{test,package,release}.yml` for tests, `.deb` validation, and artifact signing checks.
+- [x] 7.3 Add contributor/reporter guardrails in `.github/ISSUE_TEMPLATE/*`, `.github/pull_request_template.md`, and `CONTRIBUTING.md` for reproducible Ubuntu bug reports.
