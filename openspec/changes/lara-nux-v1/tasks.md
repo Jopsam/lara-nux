@@ -22,9 +22,9 @@
 
 ## Phase 4: Client Shell / UI
 
-- [ ] 4.1 Scaffold the selected native shell in `client/src-tauri/*` or `client/wails.*` and wire tray, window lifecycle, and daemon-socket connectivity against the corrected backend activation/runtime/health RPC flows.
-- [ ] 4.2 Build `client/ui/pages/sites/*` and `client/ui/components/site-form/*` for add/edit/list flows, Laravel-path errors, and duplicate-domain feedback.
-- [ ] 4.3 Build `client/ui/pages/runtimes/*` and `client/ui/components/health-panel/*` for runtime switching, service states, and remediation messages.
+- [x] 4.1 Scaffold the selected native shell in `client/src-tauri/*` or `client/wails.*` and wire tray, window lifecycle, and daemon-socket connectivity against the corrected backend activation/runtime/health RPC flows.
+- [x] 4.2 Build `client/ui/pages/sites/*` and `client/ui/components/site-form/*` for add/edit/list flows, Laravel-path errors, and duplicate-domain feedback.
+- [x] 4.3 Build `client/ui/pages/runtimes/*` and `client/ui/components/health-panel/*` for runtime switching, service states, and remediation messages.
 
 ## Phase 5: Packaging / Install / Uninstall
 
