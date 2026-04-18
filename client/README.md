@@ -2,7 +2,7 @@
 
 ## Ownership
 
-The `client/` package owns the unprivileged desktop experience for Lara Nuxt.
+The `client/` package owns the unprivileged desktop experience for Lara Nux.
 
 - Wails shell integration and native window/tray lifecycle
 - Nuxt UI, view models, and operator workflows

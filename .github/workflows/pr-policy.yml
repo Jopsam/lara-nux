@@ -1,0 +1,37 @@
+name: PR Policy Check
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize, labeled, unlabeled]
+
+jobs:
+  require-linked-issue:
+    name: Require linked issue
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check PR body for closing issue reference
+        env:
+          PR_BODY: ${{ github.event.pull_request.body }}
+        run: |
+          if ! printf '%s' "$PR_BODY" | grep -qiE '(closes|fixes|resolves) #[0-9]+'; then
+            echo "❌ PR policy failed: include a closing issue reference in the PR body, for example 'Closes #12'."
+            exit 1
+          fi
+
+  require-type-label:
+    name: Require type label
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check PR labels for type namespace
+        env:
+          LABELS: ${{ toJSON(github.event.pull_request.labels.*.name) }}
+        run: |
+          COUNT=$(printf '%s' "$LABELS" | grep -o '"type:' | wc -l | tr -d ' ')
+          if [ "$COUNT" -eq 0 ]; then
+            echo "❌ PR policy failed: add exactly one type:* label to the PR (for example type:bug or type:feature)."
+            exit 1
+          fi
+          if [ "$COUNT" -gt 1 ]; then
+            echo "❌ PR policy failed: multiple type:* labels found. Keep exactly one type:* label on the PR."
+            exit 1
+          fi

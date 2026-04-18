@@ -2,7 +2,7 @@
 
 ## Ownership
 
-The `daemon/` package owns every privileged capability in Lara Nuxt.
+The `daemon/` package owns every privileged capability in Lara Nux.
 
 - Unix-socket IPC bootstrap and daemon lifecycle
 - Ubuntu host mutation (resolver, Caddy, PHP-FPM, packages, systemd)

@@ -81,7 +81,7 @@ func (s *BootstrapService) Preflight(ctx context.Context) (BootstrapReport, erro
 	}
 
 	report.Host = release
-	report.addCheck("ubuntu-host", release.ID == "ubuntu", fmt.Sprintf("Detected host %s %s.", release.ID, release.VersionID), "Run Lara Nuxt only on supported Ubuntu LTS releases.")
+	report.addCheck("ubuntu-host", release.ID == "ubuntu", fmt.Sprintf("Detected host %s %s.", release.ID, release.VersionID), "Run Lara Nux only on supported Ubuntu LTS releases.")
 	report.addCheck("ubuntu-release", supportedUbuntuRelease(release.VersionID), fmt.Sprintf("Ubuntu release %s is within the supported matrix.", release.VersionID), "Use Ubuntu 22.04 or 24.04 for v1 support.")
 	report.addCheck("privileges", os.Geteuid() == 0, "Daemon has the privileges required for system bootstrap.", "Install and run the daemon through a privileged systemd unit or elevated installer helper.")
 	report.addCheck("daemon-group", groupExists("lara-nux"), "The lara-nux operator group exists for socket access control.", "Create the lara-nux system group before starting the daemon so client access can be mediated through Unix socket permissions.")
@@ -92,7 +92,7 @@ func (s *BootstrapService) Preflight(ctx context.Context) (BootstrapReport, erro
 			"dependency-"+dependency,
 			depErr == nil,
 			fmt.Sprintf("Required host dependency %s is available.", dependency),
-			fmt.Sprintf("Install or restore the Ubuntu system package that provides %s before bootstrapping Lara Nuxt.", dependency),
+			fmt.Sprintf("Install or restore the Ubuntu system package that provides %s before bootstrapping Lara Nux.", dependency),
 		)
 	}
 

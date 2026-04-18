@@ -1,0 +1,29 @@
+name: Stale Issues and PRs
+
+on:
+  schedule:
+    - cron: '0 9 * * 1'
+  workflow_dispatch:
+
+jobs:
+  stale:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/stale@v9
+        with:
+          days-before-stale: 45
+          days-before-close: 14
+          stale-issue-label: status:stale
+          stale-pr-label: status:stale
+          exempt-issue-labels: status:approved,status:in-progress,priority:critical
+          exempt-pr-labels: status:in-progress,priority:critical
+          stale-issue-message: >
+            This issue has been inactive for 45 days. If it is still relevant,
+            please add updated context. Otherwise it will be closed in 14 days.
+          close-issue-message: >
+            Closing due to inactivity. Feel free to reopen with updated context.
+          stale-pr-message: >
+            This PR has been inactive for 45 days. Please update it if you want
+            review to continue. Otherwise it will be closed in 14 days.
+          close-pr-message: >
+            Closing due to inactivity. Feel free to reopen when it is ready to continue.
