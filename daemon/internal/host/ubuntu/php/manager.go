@@ -12,7 +12,10 @@ import (
 	"github.com/jopsam/lara-nux/daemon/internal/host"
 )
 
-const managedMarker = "# Managed by Lara Nux"
+const (
+	managedPoolMarker     = "; Managed by Lara Nux"
+	managedOverrideMarker = "# Managed by Lara Nux"
+)
 
 type commandRunner interface {
 	Run(ctx context.Context, name string, args ...string) (string, error)
@@ -220,24 +223,11 @@ func (m *Manager) restartService(ctx context.Context, serviceName string) error 
 }
 
 func renderPoolConfig(runtime host.PHPRuntime) string {
-	return fmt.Sprintf(`%s
-[lara-nux]
-user = www-data
-group = www-data
-listen = %s
-listen.owner = www-data
-listen.group = www-data
-pm = dynamic
-pm.max_children = 10
-pm.start_servers = 2
-pm.min_spare_servers = 1
-pm.max_spare_servers = 4
-chdir = /
-`, managedMarker, runtime.SocketPath)
+	return fmt.Sprintf("%s\n[lara-nux]\nuser = www-data\ngroup = www-data\nlisten = %s\nlisten.owner = caddy\nlisten.group = caddy\npm = dynamic\npm.max_children = 10\npm.start_servers = 2\npm.min_spare_servers = 1\npm.max_spare_servers = 4\nchdir = /\n", managedPoolMarker, runtime.SocketPath)
 }
 
 func renderOverrideConfig() string {
-	return managedMarker + "\n[Service]\nRuntimeDirectory=php\nRuntimeDirectoryMode=0755\n"
+	return managedOverrideMarker + "\n[Service]\nRuntimeDirectory=php\nRuntimeDirectoryMode=0755\n"
 }
 
 func readIfExists(path string) ([]byte, bool, error) {
@@ -274,11 +264,16 @@ func removeManagedFile(path string) error {
 	if err != nil || !exists {
 		return err
 	}
-	if !strings.Contains(string(payload), managedMarker) {
+	if !isManagedPHPAsset(payload) {
 		return fmt.Errorf("%w: php-fpm asset %s is not owned by Lara Nux", host.ErrManagedAssetConflict, path)
 	}
 	if err := os.Remove(path); err != nil && !errors.Is(err, os.ErrNotExist) {
 		return fmt.Errorf("remove managed php-fpm asset %s: %w", path, err)
 	}
 	return nil
+}
+
+func isManagedPHPAsset(payload []byte) bool {
+	content := string(payload)
+	return strings.Contains(content, managedPoolMarker) || strings.Contains(content, managedOverrideMarker)
 }

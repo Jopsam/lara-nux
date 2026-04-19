@@ -1,10 +1,10 @@
-# Managed by Lara Nux
+; Managed by Lara Nux
 [lara-nux]
 user = www-data
 group = www-data
 listen = __SOCKET_PATH__
-listen.owner = www-data
-listen.group = www-data
+listen.owner = caddy
+listen.group = caddy
 pm = dynamic
 pm.max_children = 10
 pm.start_servers = 2

@@ -22,9 +22,12 @@ storybook-static/
 # Caches / temp
 .cache/
 .tmp/
+.tmp-lara-nuxd
 tmp/
 temp/
 *.tmp
+/debian
+packaging/ubuntu/stage/
 
 # Logs
 logs/

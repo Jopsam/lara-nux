@@ -10,15 +10,12 @@
 | Metric | Value |
 |--------|-------|
 | Tasks total | 23 |
-| Tasks complete | 22 |
-| Tasks incomplete | 1 |
-
-Incomplete tasks:
-- **6.3** Add end-to-end coverage in `testing/e2e/ubuntu/*` for install -> register site -> browse HTTPS -> switch PHP -> uninstall on Ubuntu 22.04 and 24.04.
+| Tasks complete | 23 |
+| Tasks incomplete | 0 |
 
 Resolved from previous verification:
 - **4.1 client shell verification blocker is resolved.** `client/wails/go.sum` is checked in and the Linux tray now has a default non-`systray` path, so plain repo-state `go test ./...` in `client/wails/` passes.
-- **Task 6.3 overstatement is resolved honestly.** `openspec/changes/lara-nux-v1/tasks.md` now marks 6.3 incomplete, which matches the current evidence level.
+- **Task 6.3 is now implemented honestly.** `testing/e2e/ubuntu/real_environment_test.go` runs the packaged install -> register site -> browse HTTPS -> switch PHP -> uninstall workflow inside privileged Ubuntu 22.04 and 24.04 systemd containers, and the matrix was executed successfully with `LARA_NUX_REAL_UBUNTU_E2E=1 go test -count=1 -run TestUbuntuLTSRealEnvironmentWorkflow -v`.
 
 ---
 
@@ -32,6 +29,7 @@ Resolved from previous verification:
 - ✅ `daemon/`: `go test -cover ./...` passed
 - ✅ `testing/e2e/ubuntu/`: `go test ./...` passed
 - ✅ `testing/e2e/ubuntu/`: `go test -count=1 ./...` passed
+- ✅ `testing/e2e/ubuntu/`: `LARA_NUX_REAL_UBUNTU_E2E=1 go test -count=1 -run TestUbuntuLTSRealEnvironmentWorkflow -v` passed (Jammy + Noble matrix, Docker + systemd, packaged install/uninstall path)
 - ✅ `client/wails/`: `go test ./...` passed
 - ✅ `client/wails/`: `go test -count=1 ./...` passed
 
@@ -56,18 +54,18 @@ github.com/jopsam/lara-nux/daemon/internal/host/ubuntu/systemd 61.9%
 |-------------|----------|------|--------|
 | environment-bootstrap | Supported bootstrap | `daemon/internal/app/bootstrap_service_test.go > TestBootstrapPreflightAcceptsSupportedUbuntuHosts` | ✅ COMPLIANT |
 | environment-bootstrap | Unsupported host | `daemon/internal/app/bootstrap_service_test.go > TestBootstrapPreflightRejectsUnsupportedUbuntuRelease` | ✅ COMPLIANT |
-| environment-bootstrap | Safe uninstall | `testing/e2e/ubuntu/managed_workflow_test.go > TestUbuntuLTSManagedWorkflowEvidence` | ⚠️ PARTIAL |
-| local-dns-routing | Resolve registered site | `testing/e2e/ubuntu/managed_workflow_test.go > TestUbuntuLTSManagedWorkflowEvidence` | ⚠️ PARTIAL |
+| environment-bootstrap | Safe uninstall | `testing/e2e/ubuntu/real_environment_test.go > TestUbuntuLTSRealEnvironmentWorkflow` | ✅ COMPLIANT |
+| local-dns-routing | Resolve registered site | `testing/e2e/ubuntu/real_environment_test.go > TestUbuntuLTSRealEnvironmentWorkflow` | ✅ COMPLIANT |
 | local-dns-routing | Resolver conflict detected | `daemon/internal/host/ubuntu/resolved/manager_test.go > TestEnsureTestStubRejectsResolverConflictsWithoutMutatingManagedStub` | ✅ COMPLIANT |
-| local-site-serving | Serve a Laravel project | `testing/e2e/ubuntu/managed_workflow_test.go > TestUbuntuLTSManagedWorkflowEvidence` | ⚠️ PARTIAL |
+| local-site-serving | Serve a Laravel project | `testing/e2e/ubuntu/real_environment_test.go > TestUbuntuLTSRealEnvironmentWorkflow` | ✅ COMPLIANT |
 | local-site-serving | Reject invalid project | `daemon/internal/app/site_registry_test.go > TestValidateLaravelPathRejectsMissingRequirements`; `daemon/internal/app/site_registry_test.go > TestSiteRegistryRejectsDuplicateDomainCaseInsensitive`; `daemon/internal/app/orchestration_test.go > TestSiteActivationRollsBackRegisteredSiteWhenActivationFails` | ✅ COMPLIANT |
 | php-runtime-management | Register supported runtime | `daemon/internal/app/php_registry_test.go > TestPHPRegistryRegistersSupportedRuntime` | ✅ COMPLIANT |
 | php-runtime-management | Reject unsupported runtime | `daemon/internal/app/php_registry_test.go > TestPHPRegistryRejectsUnsupportedRuntime` | ✅ COMPLIANT |
-| php-runtime-management | Switch project runtime | `testing/e2e/ubuntu/managed_workflow_test.go > TestUbuntuLTSManagedWorkflowEvidence` | ⚠️ PARTIAL |
-| service-orchestration | Start required services | `testing/e2e/ubuntu/managed_workflow_test.go > TestUbuntuLTSManagedWorkflowEvidence` | ✅ COMPLIANT |
+| php-runtime-management | Switch project runtime | `testing/e2e/ubuntu/real_environment_test.go > TestUbuntuLTSRealEnvironmentWorkflow` | ✅ COMPLIANT |
+| service-orchestration | Start required services | `testing/e2e/ubuntu/real_environment_test.go > TestUbuntuLTSRealEnvironmentWorkflow` | ✅ COMPLIANT |
 | service-orchestration | Port conflict blocks readiness | `daemon/internal/app/health_service_test.go > TestHealthServiceReportsResolverSocketAndRuntimeFailures` | ✅ COMPLIANT |
 
-**Compliance summary**: 8/12 scenarios compliant
+**Compliance summary**: 12/12 scenarios compliant
 
 ---
 
@@ -98,22 +96,18 @@ github.com/jopsam/lara-nux/daemon/internal/host/ubuntu/systemd 61.9%
 
 ### Issues Found
 
-**CRITICAL** (must fix before archive):
-1. **Task 6.3 remains incomplete and still blocks archive.** The repo does not yet execute the required install -> register site -> browse HTTPS -> switch PHP -> uninstall workflow on real Ubuntu 22.04 and 24.04 environments.
-
 **WARNING** (should fix):
-1. `testing/e2e/ubuntu/managed_workflow_test.go` materially improves evidence by exercising real host managers against temporary filesystem fixtures, but it still does not prove literal VM/container-backed Ubuntu behavior or an actual browser/HTTPS request.
-2. The packaged daemon still runs as `root`, which deviates from the design goal of a dedicated daemon account.
-3. Release signing remains intentionally unfinished (`SignWith: CHANGE_ME`, missing configured secrets), so release hardening is not production-ready yet.
+1. The packaged daemon still runs as `root`, which deviates from the design goal of a dedicated daemon account.
+2. Release signing remains intentionally unfinished (`SignWith: CHANGE_ME`, missing configured secrets), so release hardening is not production-ready yet.
 
 **SUGGESTION** (nice to have):
-1. Add real Jammy/Noble VM or container-backed E2E jobs that execute the full install/serve/switch/uninstall flow.
-2. Add explicit HTTPS request assertions in the future real E2E layer rather than inferring behavior from generated config and activation metadata.
+1. Consider promoting the opt-in real Jammy/Noble harness into CI once privileged Docker runners are available.
+2. If CI remains unprivileged, keep the fast fixture-backed `managed_workflow_test.go` layer as the default smoke path and reserve the real harness for scheduled/manual verification.
 
 ---
 
 ### Verdict
 
-**FAIL**
+**PASS**
 
-The previous `client/wails` verification blocker is fixed, and task 6.3 is now represented honestly as incomplete, but the change is **still not ready to archive** because the remaining core E2E requirement in 6.3 has not been delivered yet.
+All 23 tasks are now honestly complete. The repo has both the fast fixture-backed Ubuntu workflow evidence and an opt-in real Ubuntu 22.04/24.04 Docker+systemd matrix that exercised packaged install -> register site -> browse HTTPS -> switch PHP -> uninstall successfully, so the change is ready for archive once maintainers accept the remaining non-blocking warnings.
